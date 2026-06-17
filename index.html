@@ -276,6 +276,36 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.6;}
 .her-mode .tab.active{color:var(--rose);border-bottom-color:var(--rose);}
 .her-mode .btn{background:var(--rose);color:#fff;}
 .her-mode .inp:focus,.her-mode .note-area:focus{border-color:var(--rose);}
+
+/* ── SLEEP TRACKER ── */
+.sleep-quality-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0;}
+.sleep-q-btn{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 4px;text-align:center;cursor:pointer;transition:all .2s;font-size:11px;color:var(--muted);}
+.sleep-q-btn span{display:block;font-size:22px;margin-bottom:4px;}
+.sleep-q-btn:hover{border-color:var(--sky);color:var(--text);}
+.sleep-q-btn.selected{border-color:var(--sky);background:rgba(107,159,196,.12);color:var(--sky);}
+.sleep-log-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.sleep-log-item:last-child{border-bottom:none;}
+.sleep-log-date{font-size:11px;color:var(--muted);min-width:70px;}
+.sleep-duration{font-family:var(--display);font-size:18px;color:var(--sky);min-width:50px;}
+.sleep-quality-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.sleep-bar-wrap{flex:1;background:var(--border);border-radius:99px;height:5px;overflow:hidden;}
+.sleep-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--rose),var(--sky));transition:width .4s;}
+.sleep-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.sleep-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;}
+.sleep-stat-val{font-family:var(--display);font-size:26px;color:var(--sky);}
+.sleep-stat-label{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:3px;}
+.bedtime-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.time-inp{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;font-family:var(--body);width:130px;}
+.time-inp:focus{outline:none;border-color:var(--sky);}
+
+/* ── MILESTONES ── */
+.ml-status-btn{font-size:10px;padding:2px 8px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;margin-top:4px;white-space:nowrap;}
+.ml-status-btn:hover{border-color:var(--gold);color:var(--gold);}
+.ml-del-btn{font-size:11px;background:transparent;border:none;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:4px;}
+.ml-del-btn:hover{color:var(--rose);}
+.ml-add-form{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-top:14px;}
+.ml-date-el{font-size:12px;color:var(--muted);margin-bottom:4px;}
+.ml-note-el{font-size:13px;color:var(--text-dim);line-height:1.6;}
 </style>
 </head>
 <body>
@@ -318,6 +348,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.6;}
   <button class="tab" data-tab="dates" onclick="switchTab(this,'dates')">Date Nights</button>
   <button class="tab" data-tab="gifts" onclick="switchTab(this,'gifts')">Gifts</button>
   <button class="tab" data-tab="mood" onclick="switchTab(this,'mood')">Check-In</button>
+  <button class="tab" data-tab="sleep" onclick="switchTab(this,'sleep')">🌙 Sleep</button>
   <button class="tab" data-tab="vision" onclick="switchTab(this,'vision')">Life Vision</button>
   <button class="tab tab-locked" data-tab="surprises" onclick="switchTab(this,'surprises')"><span class="lock-icon">🔒</span> Surprises</button>
 </nav>
@@ -548,7 +579,7 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.6;}
       <button class="btn" onclick="addGift()">+ Add</button>
     </div>
   </div>
-  <!-- HER: wishlist -->
+  <!-- HER: wishlist (editable) -->
   <div class="card mb16 her-only">
     <div class="card-eyebrow">My Wishlist — tell him what you'd love 🌸</div>
     <div class="row">
@@ -556,6 +587,12 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.6;}
       <button class="btn btn-rose" onclick="addHerWish()">+ Add Wish</button>
     </div>
     <div id="her-wish-list" class="mt12"></div>
+  </div>
+  <!-- HIS: wishlist read-only view -->
+  <div class="card mb16 his-only" style="border-left:3px solid var(--rose);">
+    <div class="card-eyebrow" style="color:var(--rose);">🌸 Her Wishlist</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">What she's hoping for — straight from her heart.</div>
+    <div id="his-wish-view"></div>
   </div>
   <div class="grid-2">
     <div class="card">
@@ -588,28 +625,71 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.6;}
     <div class="section-eyebrow">Emotional Awareness</div>
     <h2>Daily <em>Check-In</em></h2>
   </div>
+
+  <!-- His check-in form (his-only) -->
+  <div class="card card-accent-top his-only mb20">
+    <div class="card-eyebrow" style="color:var(--gold);">👤 How are you feeling today?</div>
+    <div class="mood-grid" id="his-mood-grid">
+      <div onclick="selectMood('his','😊','Happy',this)" class="mood-btn"><span>😊</span><span class="mood-label">Happy</span></div>
+      <div onclick="selectMood('his','😌','At Peace',this)" class="mood-btn"><span>😌</span><span class="mood-label">At Peace</span></div>
+      <div onclick="selectMood('his','😔','Tired',this)" class="mood-btn"><span>😔</span><span class="mood-label">Tired</span></div>
+      <div onclick="selectMood('his','😢','Sad',this)" class="mood-btn"><span>😢</span><span class="mood-label">Sad</span></div>
+      <div onclick="selectMood('his','😤','Stressed',this)" class="mood-btn"><span>😤</span><span class="mood-label">Stressed</span></div>
+      <div onclick="selectMood('his','🥰','Loved',this)" class="mood-btn"><span>🥰</span><span class="mood-label">Loved</span></div>
+      <div onclick="selectMood('his','😤','Overwhelmed',this)" class="mood-btn"><span>🤯</span><span class="mood-label">Overwhelmed</span></div>
+      <div onclick="selectMood('his','✨','Grateful',this)" class="mood-btn"><span>✨</span><span class="mood-label">Grateful</span></div>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label style="font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:6px;">What I need from her today</label>
+      <input class="inp" id="his-mood-note" placeholder="e.g. Support, space, encouragement…"/>
+    </div>
+    <button class="btn" style="margin-top:10px;" onclick="logMood('his')">Log My Check-In</button>
+  </div>
+
+  <!-- Her check-in form (her-only) -->
+  <div class="card card-accent-rose her-only mb20">
+    <div class="card-eyebrow" style="color:var(--rose);">🌸 How are you feeling today?</div>
+    <div class="mood-grid" id="her-mood-grid">
+      <div onclick="selectMood('her','😊','Happy',this)" class="mood-btn"><span>😊</span><span class="mood-label">Happy</span></div>
+      <div onclick="selectMood('her','😌','At Peace',this)" class="mood-btn"><span>😌</span><span class="mood-label">At Peace</span></div>
+      <div onclick="selectMood('her','😔','Tired',this)" class="mood-btn"><span>😔</span><span class="mood-label">Tired</span></div>
+      <div onclick="selectMood('her','😢','Sad',this)" class="mood-btn"><span>😢</span><span class="mood-label">Sad</span></div>
+      <div onclick="selectMood('her','😤','Stressed',this)" class="mood-btn"><span>😤</span><span class="mood-label">Stressed</span></div>
+      <div onclick="selectMood('her','🥰','Loved',this)" class="mood-btn"><span>🥰</span><span class="mood-label">Loved</span></div>
+      <div onclick="selectMood('her','😴','Needs Rest',this)" class="mood-btn"><span>😴</span><span class="mood-label">Needs Rest</span></div>
+      <div onclick="selectMood('her','✨','Glowing',this)" class="mood-btn"><span>✨</span><span class="mood-label">Glowing</span></div>
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label style="font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:6px;">What I need from him today</label>
+      <input class="inp" id="her-mood-note" placeholder="e.g. Space, encouragement, a hug…"/>
+    </div>
+    <button class="btn btn-rose" style="margin-top:10px;" onclick="logMood('her')">Log My Check-In</button>
+  </div>
+
+  <!-- Notes — both directions + reflection -->
   <div class="grid-2 mb20">
-    <div class="card card-accent-top">
-      <div class="card-eyebrow his-only">How does she seem today?</div>
-      <div class="card-eyebrow her-only">How are you feeling today? 🌸</div>
-      <div class="mood-grid">
-        <div onclick="selectMood('😊','Happy')" class="mood-btn"><span>😊</span><span class="mood-label">Happy</span></div>
-        <div onclick="selectMood('😌','At Peace')" class="mood-btn"><span>😌</span><span class="mood-label">At Peace</span></div>
-        <div onclick="selectMood('😔','Tired')" class="mood-btn"><span>😔</span><span class="mood-label">Tired</span></div>
-        <div onclick="selectMood('😢','Sad')" class="mood-btn"><span>😢</span><span class="mood-label">Sad</span></div>
-        <div onclick="selectMood('😤','Stressed')" class="mood-btn"><span>😤</span><span class="mood-label">Stressed</span></div>
-        <div onclick="selectMood('🥰','Loved')" class="mood-btn"><span>🥰</span><span class="mood-label">Loved</span></div>
-        <div onclick="selectMood('😴','Needs Rest')" class="mood-btn"><span>😴</span><span class="mood-label">Needs Rest</span></div>
-        <div onclick="selectMood('✨','Glowing')" class="mood-btn"><span>✨</span><span class="mood-label">Glowing</span></div>
+    <div class="col">
+      <!-- His note to her (his writes, she reads) -->
+      <div class="card" style="border-left:3px solid var(--gold);margin-bottom:12px;">
+        <div class="card-eyebrow his-only" style="color:var(--gold);">A note to her today 💬</div>
+        <div class="card-eyebrow her-only" style="color:var(--gold);">His note to me today 👤</div>
+        <textarea class="note-area his-only" id="checkin-note-his" placeholder="What's on your heart for her today…" style="min-height:90px;" oninput="saveNote('checkin-note-his')"></textarea>
+        <div class="her-only" id="checkin-note-his-view" style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--gold);line-height:1.8;min-height:50px;padding:4px 0;">—</div>
       </div>
-      <div class="field">
-        <label class="his-only">What she needs from me today</label>
-        <label class="her-only">What I need from him today</label>
-        <input class="inp" id="mood-note" placeholder="e.g. Space, encouragement, a hug…"/>
+      <!-- Her note to him (she writes, he reads) -->
+      <div class="card" style="border-left:3px solid var(--rose);">
+        <div class="card-eyebrow her-only" style="color:var(--rose);">A note to him today 💬</div>
+        <div class="card-eyebrow his-only" style="color:var(--rose);">Her note to me today 🌸</div>
+        <textarea class="note-area her-only" id="checkin-note-her" placeholder="Write what's on your heart. He'll see this…" style="min-height:90px;" oninput="saveNote('checkin-note-her')"></textarea>
+        <div class="his-only" id="checkin-note-her-view" style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--rose);line-height:1.8;min-height:50px;padding:4px 0;">—</div>
       </div>
-      <button class="btn" onclick="logMood()">Log Check-In</button>
     </div>
     <div class="col">
+      <!-- His side: see her latest mood + reflection prompts -->
+      <div class="card his-only" style="margin-bottom:12px;">
+        <div class="card-eyebrow" style="color:var(--rose);">🌸 Her Latest Check-In</div>
+        <div id="his-see-her-checkin" style="font-size:13px;color:var(--text-dim);padding:6px 0;">No check-in logged yet.</div>
+      </div>
       <div class="card his-only">
         <div class="card-eyebrow">Reflection Questions — Ask Her</div>
         <div style="font-size:13px;color:var(--text-dim);line-height:2.1;">
@@ -621,22 +701,156 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.6;}
           <div>✦ Is there a dream I can help with?</div>
         </div>
       </div>
-      <!-- HER: write to him freely -->
-      <div class="card card-accent-rose her-only">
-        <div class="card-eyebrow">A message for him — say anything 🌸</div>
-        <textarea class="note-area" id="her-message-to-him" placeholder="Write what's on your heart. He'll see this…" style="min-height:140px;" oninput="saveNote('her-message-to-him')"></textarea>
-      </div>
-      <div class="card card-accent-sage">
-        <div class="card-eyebrow his-only">Her message to me</div>
-        <div class="card-eyebrow her-only">Communication notes</div>
-        <div class="his-only" id="his-see-her-message" style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--rose);line-height:1.8;min-height:60px;padding:4px 0;">—</div>
-        <div class="her-only"><textarea class="note-area" id="conflict-notes" placeholder="What helps us communicate better…" style="min-height:80px;" oninput="saveNote('conflict-notes')"></textarea></div>
+      <!-- Her side: see his latest mood -->
+      <div class="card her-only">
+        <div class="card-eyebrow" style="color:var(--gold);">👤 His Latest Check-In</div>
+        <div id="her-see-his-checkin" style="font-size:13px;color:var(--text-dim);padding:6px 0;">No check-in logged yet.</div>
       </div>
     </div>
   </div>
+
+  <!-- Shared history -->
   <div class="card">
     <div class="card-eyebrow">Check-In History</div>
-    <div id="mood-history"></div>
+    <div id="mood-history" style="margin-top:6px;"></div>
+  </div>
+</div>
+
+
+<!-- ══════════ SLEEP TRACKER ══════════ -->
+<div class="panel" id="panel-sleep">
+  <div class="section-head">
+    <div class="section-eyebrow">Rest & Recovery</div>
+    <h2>Sleep <em>Together</em></h2>
+  </div>
+
+  <!-- Shared stats comparison -->
+  <div class="grid-2 mb20">
+    <div class="card card-accent-top" style="text-align:center;">
+      <div class="card-eyebrow" style="color:var(--gold);">👤 His Sleep</div>
+      <div style="font-family:var(--display);font-size:32px;color:var(--gold);" id="sl-his-avg">—</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;">avg hrs · 7 days</div>
+      <div style="margin-top:10px;display:flex;justify-content:center;gap:20px;">
+        <div><div style="font-family:var(--display);font-size:20px;color:var(--gold);" id="sl-his-last">—</div><div style="font-size:10px;color:var(--muted);">Last night</div></div>
+        <div><div style="font-family:var(--display);font-size:20px;color:var(--gold);" id="sl-his-streak">0</div><div style="font-size:10px;color:var(--muted);">Good streak</div></div>
+      </div>
+    </div>
+    <div class="card card-accent-rose" style="text-align:center;">
+      <div class="card-eyebrow" style="color:var(--rose);">🌸 Her Sleep</div>
+      <div style="font-family:var(--display);font-size:32px;color:var(--rose);" id="sl-her-avg">—</div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;">avg hrs · 7 days</div>
+      <div style="margin-top:10px;display:flex;justify-content:center;gap:20px;">
+        <div><div style="font-family:var(--display);font-size:20px;color:var(--rose);" id="sl-her-last">—</div><div style="font-size:10px;color:var(--muted);">Last night</div></div>
+        <div><div style="font-family:var(--display);font-size:20px;color:var(--rose);" id="sl-her-streak">0</div><div style="font-size:10px;color:var(--muted);">Good streak</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log entry — shows appropriate side based on mode, His Side sees both -->
+  <div class="grid-2 mb20">
+    <!-- His log form (his-only visible by default, his side sees it; her side sees her form) -->
+    <div class="card card-accent-top his-only">
+      <div class="card-eyebrow" style="color:var(--gold);">Log My Sleep 👤</div>
+      <div class="field" style="margin-bottom:14px;">
+        <label style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:8px;">Bedtime & Wake</label>
+        <div class="bedtime-row">
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Went to sleep</div><input type="time" class="time-inp" id="sl-his-bed" value="22:30"/></div>
+          <div style="font-size:20px;color:var(--muted);margin-top:16px;">→</div>
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Woke up</div><input type="time" class="time-inp" id="sl-his-wake" value="06:30"/></div>
+          <div id="sl-his-calc" style="font-family:var(--display);font-size:22px;color:var(--gold);margin-top:16px;min-width:50px;"></div>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;">Quality</label>
+        <div class="sleep-quality-grid" id="his-q-grid">
+          <div class="sleep-q-btn" onclick="selectSleepQ('his',1,this)"><span>😫</span>Poor</div>
+          <div class="sleep-q-btn" onclick="selectSleepQ('his',2,this)"><span>😔</span>Fair</div>
+          <div class="sleep-q-btn" onclick="selectSleepQ('his',3,this)"><span>😐</span>Okay</div>
+          <div class="sleep-q-btn" onclick="selectSleepQ('his',4,this)"><span>😊</span>Good</div>
+          <div class="sleep-q-btn" onclick="selectSleepQ('his',5,this)"><span>😴</span>Great</div>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;">Note</label>
+        <input class="inp" id="sl-his-note-inp" placeholder="How you slept, dreams, distractions…"/>
+      </div>
+      <button class="btn" style="background:var(--gold);color:#0B0E14;" onclick="logSleep('his')">Log My Sleep</button>
+    </div>
+
+    <!-- Her log form -->
+    <div class="card card-accent-rose her-only">
+      <div class="card-eyebrow" style="color:var(--rose);">Log My Sleep 🌸</div>
+      <div class="field" style="margin-bottom:14px;">
+        <label style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:8px;">Bedtime & Wake</label>
+        <div class="bedtime-row">
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Went to sleep</div><input type="time" class="time-inp" id="sl-her-bed" value="22:30"/></div>
+          <div style="font-size:20px;color:var(--muted);margin-top:16px;">→</div>
+          <div><div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Woke up</div><input type="time" class="time-inp" id="sl-her-wake" value="06:30"/></div>
+          <div id="sl-her-calc" style="font-family:var(--display);font-size:22px;color:var(--rose);margin-top:16px;min-width:50px;"></div>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;">Quality</label>
+        <div class="sleep-quality-grid" id="her-q-grid">
+          <div class="sleep-q-btn" onclick="selectSleepQ('her',1,this)"><span>😫</span>Poor</div>
+          <div class="sleep-q-btn" onclick="selectSleepQ('her',2,this)"><span>😔</span>Fair</div>
+          <div class="sleep-q-btn" onclick="selectSleepQ('her',3,this)"><span>😐</span>Okay</div>
+          <div class="sleep-q-btn" onclick="selectSleepQ('her',4,this)"><span>😊</span>Good</div>
+          <div class="sleep-q-btn" onclick="selectSleepQ('her',5,this)"><span>😴</span>Great</div>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;">Note</label>
+        <input class="inp" id="sl-her-note-inp" placeholder="How you slept, dreams, how you feel…"/>
+      </div>
+      <button class="btn btn-rose" onclick="logSleep('her')">Log My Sleep</button>
+    </div>
+
+    <!-- Shared bedtime goal + mutual notes -->
+    <div class="col his-only">
+      <div class="card card-accent-top" style="margin-bottom:12px;">
+        <div class="card-eyebrow">Shared Bedtime Goal</div>
+        <div class="bedtime-row" style="margin-bottom:8px;">
+          <input type="time" class="time-inp" id="sl-goal-bed" value="22:00" oninput="saveSleepGoal()"/>
+          <span style="color:var(--muted);font-size:12px;">sleep goal</span>
+        </div>
+        <div class="bedtime-row">
+          <input type="time" class="time-inp" id="sl-goal-wake" value="06:00" oninput="saveSleepGoal()"/>
+          <span style="color:var(--muted);font-size:12px;">wake goal</span>
+        </div>
+        <div id="sl-goal-hrs" style="margin-top:10px;font-family:var(--display);font-size:14px;color:var(--sky);"></div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--gold);">
+        <div class="card-eyebrow" style="color:var(--gold);">Note to her 💬</div>
+        <textarea class="note-area" id="sleep-note-his" placeholder="Wind-down reminders, encouragement, thoughts on sleep…" style="min-height:80px;" oninput="saveNote('sleep-note-his')"></textarea>
+      </div>
+      <div class="card" style="border-left:3px solid var(--rose);margin-top:12px;">
+        <div class="card-eyebrow" style="color:var(--rose);">Her note to me 🌸</div>
+        <div id="sleep-note-her-view" style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--rose);line-height:1.8;min-height:40px;padding:4px 0;">—</div>
+      </div>
+    </div>
+
+    <div class="col her-only">
+      <div class="card card-accent-rose" style="margin-bottom:12px;">
+        <div class="card-eyebrow">Shared Bedtime Goal</div>
+        <div id="sl-goal-display" style="font-family:var(--display);font-size:18px;color:var(--sky);margin-bottom:4px;">—</div>
+        <div style="font-size:12px;color:var(--muted);">Set by your husband</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--rose);">
+        <div class="card-eyebrow" style="color:var(--rose);">Note to him 💬</div>
+        <textarea class="note-area" id="sleep-note-her" placeholder="How you slept, what helps, what you need…" style="min-height:80px;" oninput="saveNote('sleep-note-her')"></textarea>
+      </div>
+      <div class="card" style="border-left:3px solid var(--gold);margin-top:12px;">
+        <div class="card-eyebrow" style="color:var(--gold);">His note to me 👤</div>
+        <div id="sleep-note-his-view" style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--gold);line-height:1.8;min-height:40px;padding:4px 0;">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison history -->
+  <div class="card">
+    <div class="card-eyebrow">Sleep Comparison — Last 14 Nights</div>
+    <div id="sleep-compare-list" style="margin-top:10px;"></div>
   </div>
 </div>
 
@@ -646,32 +860,75 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.6;}
     <div class="section-eyebrow">Together & Forever</div>
     <h2>Our <em>Life Vision</em></h2>
   </div>
+
+  <!-- Milestones + Shared vision -->
   <div class="grid-2 mb20">
     <div class="card">
-      <div class="card-eyebrow">Marriage Milestones</div>
-      <div class="ml-row"><div class="ml-dot-col"><div class="ml-dot active"></div><div class="ml-vline"></div></div><div><div class="ml-title-el">Marriage — The Foundation</div><div class="ml-date-el">In View · By Allah's Permission</div><div class="ml-note-el">A union built on taqwa, trust, and the intention to enter Jannah together.</div></div></div>
-      <div class="ml-row"><div class="ml-dot-col"><div class="ml-dot future"></div><div class="ml-vline"></div></div><div><div class="ml-title-el">Our First Home Together</div><div class="ml-date-el">Future</div><div class="ml-note-el">A home filled with salah, laughter, and peace.</div></div></div>
-      <div class="ml-row"><div class="ml-dot-col"><div class="ml-dot future"></div><div class="ml-vline"></div></div><div><div class="ml-title-el">Children & Family</div><div class="ml-date-el">Future</div><div class="ml-note-el">Raising righteous, confident children who love Allah.</div></div></div>
-      <div class="ml-row"><div class="ml-dot-col"><div class="ml-dot future"></div><div class="ml-vline"></div></div><div><div class="ml-title-el">Hajj Together</div><div class="ml-date-el">Future</div><div class="ml-note-el">Standing at the Ka'bah side by side. Dua on the plains of Arafah.</div></div></div>
-      <div class="ml-row"><div class="ml-dot-col"><div class="ml-dot future"></div></div><div><div class="ml-title-el">Financial Freedom Together</div><div class="ml-date-el">Future</div><div class="ml-note-el">So she never worries. URD and acquisitions building toward that.</div></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div class="card-eyebrow" style="margin-bottom:0;">Marriage Milestones</div>
+        <button class="btn btn-sm" style="font-size:11px;padding:4px 10px;" onclick="toggleMlForm()">+ Add</button>
+      </div>
+      <div id="ml-list"></div>
+      <div id="ml-add-form" class="ml-add-form" style="display:none;">
+        <div class="field" style="margin-bottom:8px;">
+          <input class="inp" id="ml-inp-title" placeholder="Milestone title…" style="margin-bottom:6px;"/>
+          <input class="inp" id="ml-inp-date" placeholder="When? (e.g. Future, 2027, In View…)" style="margin-bottom:6px;"/>
+          <textarea class="note-area" id="ml-inp-note" placeholder="A note about this milestone…" style="min-height:60px;"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" onclick="addMilestone()">Save</button>
+          <button class="btn-ghost" onclick="toggleMlForm()">Cancel</button>
+        </div>
+      </div>
     </div>
     <div class="col">
-      <div class="card card-accent-top">
-        <div class="card-eyebrow his-only">My vision for our marriage</div>
-        <div class="card-eyebrow her-only">Our marriage vision</div>
-        <textarea class="note-area" id="marriage-vision" placeholder="What does our marriage look like at its best?…" style="min-height:110px;" oninput="saveNote('marriage-vision')"></textarea>
+      <!-- Shared marriage vision — both write, both see each other -->
+      <div class="card card-accent-top" style="margin-bottom:12px;">
+        <div class="card-eyebrow" style="color:var(--gold);">👤 His vision for our marriage</div>
+        <textarea class="note-area his-only" id="vision-his" placeholder="What does our marriage look like at its best? What are you building toward?…" style="min-height:80px;" oninput="saveNote('vision-his')"></textarea>
+        <div class="her-only" id="vision-his-view" style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--gold);line-height:1.8;min-height:40px;padding:4px 0;">—</div>
       </div>
-      <div class="card">
-        <div class="card-eyebrow his-only">Her goals — how I'll support them</div>
-        <div class="card-eyebrow her-only">My dreams & goals 🌸</div>
-        <textarea class="note-area" id="her-goals" placeholder="Her ambitions, dreams, growth — how you'll actively support each one…" style="min-height:100px;" oninput="saveNote('her-goals')"></textarea>
-      </div>
-      <div class="card card-accent-sage">
-        <div class="card-eyebrow his-only">A letter to her — unsent</div>
-        <div class="card-eyebrow her-only">A letter to him — unsent 🌸</div>
-        <textarea class="note-area" id="love-letter" placeholder="Write what's in your heart. Just let it flow…" style="min-height:90px;" oninput="saveNote('love-letter')"></textarea>
+      <div class="card card-accent-rose">
+        <div class="card-eyebrow" style="color:var(--rose);">🌸 Her vision for our marriage</div>
+        <textarea class="note-area her-only" id="vision-her" placeholder="What does our marriage look like at its best? What do you dream of?…" style="min-height:80px;" oninput="saveNote('vision-her')"></textarea>
+        <div class="his-only" id="vision-her-view" style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--rose);line-height:1.8;min-height:40px;padding:4px 0;">—</div>
       </div>
     </div>
+  </div>
+
+  <!-- Goals — both write their own -->
+  <div class="grid-2 mb20">
+    <div class="card" style="border-left:3px solid var(--gold);">
+      <div class="card-eyebrow" style="color:var(--gold);">👤 His Goals &amp; Dreams</div>
+      <textarea class="note-area his-only" id="his-goals" placeholder="Your ambitions, what you&#39;re building, what drives you…" style="min-height:110px;" oninput="saveNote('his-goals')"></textarea>
+      <div class="her-only" id="his-goals-view" style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--gold);line-height:1.8;min-height:60px;padding:4px 0;">—</div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--rose);">
+      <div class="card-eyebrow" style="color:var(--rose);">🌸 Her Goals &amp; Dreams</div>
+      <textarea class="note-area her-only" id="her-goals" placeholder="Your ambitions, dreams, what you want to grow into…" style="min-height:110px;" oninput="saveNote('her-goals')"></textarea>
+      <div class="his-only" id="her-goals-view" style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--rose);line-height:1.8;min-height:60px;padding:4px 0;">—</div>
+    </div>
+  </div>
+
+  <!-- Letters — each writes to the other, unsent -->
+  <div class="grid-2 mb20">
+    <div class="card card-accent-top" style="border-top-color:var(--gold);">
+      <div class="card-eyebrow" style="color:var(--gold);">👤 A letter to her — unsent</div>
+      <textarea class="note-area his-only" id="letter-his" placeholder="Write what&#39;s in your heart for her. No pressure. Just let it flow…" style="min-height:110px;" oninput="saveNote('letter-his')"></textarea>
+      <div class="her-only" id="letter-his-view" style="font-family:var(--display);font-style:italic;font-size:15px;color:var(--gold);line-height:1.9;min-height:60px;padding:4px 0;">—</div>
+    </div>
+    <div class="card card-accent-rose">
+      <div class="card-eyebrow" style="color:var(--rose);">🌸 A letter to him — unsent</div>
+      <textarea class="note-area her-only" id="letter-her" placeholder="Write what&#39;s in your heart for him. Anything. Just let it flow…" style="min-height:110px;" oninput="saveNote('letter-her')"></textarea>
+      <div class="his-only" id="letter-her-view" style="font-family:var(--display);font-style:italic;font-size:15px;color:var(--rose);line-height:1.9;min-height:60px;padding:4px 0;">—</div>
+    </div>
+  </div>
+
+  <!-- Shared reflection space -->
+  <div class="card card-accent-sage">
+    <div class="card-eyebrow">Shared Reflection — for both of you</div>
+    <div style="font-size:12px;color:var(--text-dim);margin-bottom:10px;">A space you both contribute to — gratitude, learnings, duas for each other.</div>
+    <textarea class="note-area" id="shared-reflection" placeholder="Write together: things you&#39;re grateful for, what you&#39;re learning, duas…" style="min-height:100px;" oninput="saveNote('shared-reflection')"></textarea>
   </div>
 </div>
 
@@ -932,7 +1189,7 @@ function clearSyncSettings(){
 function testSyncNow(){ syncPush(); }
 
 function refreshAll(){
-  renderOverview(); renderLove(); renderIbadah(); renderDates(); renderGifts(); renderMood();
+  renderOverview(); renderLove(); renderIbadah(); renderDates(); renderGifts(); renderMood(); renderSleep(); renderVision(); renderMilestones();
   loadNotes(); syncHerView();
   if(pinUnlocked) renderSurprises();
 }
@@ -988,9 +1245,9 @@ let state={
   mode:'his',
   notes:{},llScores:{},prayers:{},dhikrStreak:0,
   primaryLL:'',secondaryLL:'',
-  gifts:[],herWishes:[],dates:[],impDates:[],moodLog:[],surprises:[],
+  gifts:[],herWishes:[],dates:[],impDates:[],moodLog:[],surprises:[],hisSleep:[],herSleep:[],milestones:[],
 };
-let selectedMood=null;
+// selectedMood initialized in mood JS section
 let currentSurpriseType='date';
 let pinUnlocked=false;
 let pinEntry='';
@@ -1026,6 +1283,8 @@ function refreshActivePanel(name){
   if(name==='dates')renderDates();
   if(name==='gifts')renderGifts();
   if(name==='mood')renderMood();
+  if(name==='sleep')renderSleep();
+  if(name==='vision'){ renderVision(); renderMilestones(); }
 }
 
 /* ── TABS ── */
@@ -1042,6 +1301,8 @@ function switchTab(el,name){
   if(name==='dates')renderDates();
   if(name==='gifts')renderGifts();
   if(name==='mood')renderMood();
+  if(name==='sleep')renderSleep();
+  if(name==='vision'){ renderVision(); renderMilestones(); }
   if(name==='surprises'&&pinUnlocked)renderSurprises();
 }
 
@@ -1064,9 +1325,109 @@ function todayKey(){return new Date().toISOString().slice(0,10);}
 /* ── NOTES ── */
 function saveNote(key){const el=document.getElementById(key);if(el){state.notes[key]=el.value;save();syncHerView();}}
 function loadNotes(){
-  const keys=['intention-today','appreciate-today','love-commitment','quran-goal','dua-for-her','date-bucket','her-prefs','she-loves','conflict-notes','marriage-vision','her-goals','love-letter','her-ll-message','her-message-to-him','surprise-master-notes','her-wish-inp'];
+  const keys=['intention-today','appreciate-today','love-commitment','quran-goal','dua-for-her','date-bucket','her-prefs','she-loves','conflict-notes','marriage-vision','her-goals','love-letter','her-ll-message','her-message-to-him','surprise-master-notes','her-wish-inp','sleep-note-his','sleep-note-her','checkin-note-his','checkin-note-her','vision-his','vision-her','his-goals','her-goals','letter-his','letter-her','shared-reflection'];
   keys.forEach(k=>{const el=document.getElementById(k);if(el&&state.notes[k]!==undefined)el.value=state.notes[k];});
 }
+
+// ══════════════════════════════════════════════════════
+// MARRIAGE MILESTONES
+// ══════════════════════════════════════════════════════
+const DEFAULT_MILESTONES = [{"title": "Marriage \u2014 The Foundation", "date": "In View \u00b7 By Allah's Permission", "note": "A union built on taqwa, trust, and the intention to enter Jannah together.", "status": "active"}, {"title": "Our First Home Together", "date": "Future", "note": "A home filled with salah, laughter, and peace.", "status": "future"}, {"title": "Children & Family", "date": "Future", "note": "Raising righteous, confident children who love Allah.", "status": "future"}, {"title": "Hajj Together", "date": "Future", "note": "Standing at the Ka'bah side by side. Dua on the plains of Arafah.", "status": "future"}, {"title": "Financial Freedom Together", "date": "Future", "note": "So she never worries. URD and acquisitions building toward that.", "status": "future"}];
+
+function initMilestones(){
+  if(!state.milestones || !state.milestones.length){
+    state.milestones = DEFAULT_MILESTONES.map((m,i) => ({...m, id: Date.now()+i}));
+  }
+}
+
+function toggleMlForm(){
+  const f = document.getElementById('ml-add-form');
+  if(f) f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+function addMilestone(){
+  const title = document.getElementById('ml-inp-title')?.value.trim();
+  if(!title){ alert('Please add a title.'); return; }
+  const date  = document.getElementById('ml-inp-date')?.value.trim() || 'Future';
+  const note  = document.getElementById('ml-inp-note')?.value.trim() || '';
+  state.milestones = state.milestones || [];
+  state.milestones.push({ id: Date.now(), title, date, note, status: 'future' });
+  document.getElementById('ml-inp-title').value = '';
+  document.getElementById('ml-inp-date').value  = '';
+  document.getElementById('ml-inp-note').value  = '';
+  toggleMlForm();
+  save(); renderMilestones();
+}
+
+function cycleMlStatus(id){
+  const m = (state.milestones||[]).find(x => x.id === id);
+  if(!m) return;
+  const cycle = { future:'active', active:'done', done:'future' };
+  m.status = cycle[m.status] || 'future';
+  save(); renderMilestones();
+}
+
+function deleteMilestone(id){
+  if(!confirm('Remove this milestone?')) return;
+  state.milestones = (state.milestones||[]).filter(x => x.id !== id);
+  save(); renderMilestones();
+}
+
+function renderMilestones(){
+  initMilestones();
+  const list = document.getElementById('ml-list');
+  if(!list) return;
+  const isHer = state.mode === 'her';
+  const ms = state.milestones || [];
+  if(!ms.length){
+    list.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">No milestones yet — add your first one.</div>';
+    return;
+  }
+  const statusColor = { done:'var(--sage)', active:'var(--gold)', future:'var(--muted)' };
+  const statusLabel = { done:'✓ Done', active:'In Progress', future:'Future' };
+  list.innerHTML = ms.map((m, i) => {
+    const isLast = i === ms.length - 1;
+    const col = statusColor[m.status] || 'var(--muted)';
+    const dotClass = m.status === 'active' ? 'active' : m.status === 'done' ? 'done' : 'future';
+    return `<div class="ml-row">
+      <div class="ml-dot-col">
+        <div class="ml-dot ${dotClass}" style="cursor:pointer;" onclick="cycleMlStatus(${m.id})" title="Click to change status"></div>
+        ${!isLast ? '<div class="ml-vline"></div>' : ''}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div class="ml-title-el">${m.title}</div>
+        <div class="ml-date-el">${m.date}</div>
+        ${m.note ? `<div class="ml-note-el">${m.note}</div>` : ''}
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+          <button class="ml-status-btn" style="border-color:${col};color:${col};" onclick="cycleMlStatus(${m.id})">${statusLabel[m.status]||'Future'}</button>
+          <button class="ml-del-btn" onclick="deleteMilestone(${m.id})">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+// ══════════════════════════════════════════════════════
+
+function renderVision(){
+  const fields = [
+    ['vision-his',  'vision-his-view'],
+    ['vision-her',  'vision-her-view'],
+    ['his-goals',   'his-goals-view'],
+    ['her-goals',   'her-goals-view'],
+    ['letter-his',  'letter-his-view'],
+    ['letter-her',  'letter-her-view'],
+  ];
+  fields.forEach(([key, viewId]) => {
+    const ta = document.getElementById(key);
+    const vw = document.getElementById(viewId);
+    const val = state.notes[key] || '';
+    if(ta && !ta.matches(':focus')) ta.value = val;
+    if(vw) vw.textContent = val || '—';
+  });
+  const sr = document.getElementById('shared-reflection');
+  if(sr && !sr.matches(':focus') && state.notes['shared-reflection']) sr.value = state.notes['shared-reflection'];
+}
+
 function syncHerView(){
   // His notes → her read-only views
   const map={
@@ -1227,15 +1588,23 @@ function renderGifts(){
       ${!isHer?`<button class="gift-check-btn" onclick="toggleGiftBought(${g.id})">${g.bought?'↩️':'✅'}</button><button class="gift-del-btn" onclick="deleteGift(${g.id})">✕</button>`:''}
     </div>`).join(''):'<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">No gifts saved yet.</div>';
   // Her wishlist
-  const hwl=document.getElementById('her-wish-list');
-  if(hwl){
-    const wishes=state.herWishes||[];
-    hwl.innerHTML=wishes.length?wishes.map(w=>`
+  const wishes=state.herWishes||[];
+  const wishHTML=wishes.length?wishes.map(w=>`
       <div class="gift-item">
         <span style="font-size:16px;">🌸</span>
         <span class="gift-name">${w.name}</span>
         <button class="gift-del-btn" onclick="deleteHerWish(${w.id})">✕</button>
       </div>`).join(''):'<div style="color:var(--text-dim);font-size:12px;padding:8px 0;">No wishes yet — add what your heart desires.</div>';
+  const hwl=document.getElementById('her-wish-list');
+  if(hwl) hwl.innerHTML=wishHTML;
+  // His side — read-only wishlist
+  const hwv=document.getElementById('his-wish-view');
+  if(hwv){
+    hwv.innerHTML=wishes.length?wishes.map(w=>`
+      <div class="gift-item">
+        <span style="font-size:16px;">🌸</span>
+        <span class="gift-name">${w.name}</span>
+      </div>`).join(''):'<div style="color:var(--text-dim);font-size:12px;padding:8px 0;">She hasn&#39;t added any wishes yet.</div>';
   }
   // Important dates
   const idl=document.getElementById('important-dates-list');
@@ -1256,33 +1625,79 @@ function renderGifts(){
 }
 
 /* ── MOOD ── */
-function selectMood(emoji,label){
-  selectedMood={emoji,label};
-  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
-  event.currentTarget.classList.add('selected');
+let selectedMood = { his: null, her: null };
+
+function selectMood(who, emoji, label, el){
+  selectedMood[who] = {emoji, label};
+  const grid = document.getElementById(`${who}-mood-grid`);
+  if(grid) grid.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
 }
-function logMood(){
-  if(!selectedMood)return;
-  const note=document.getElementById('mood-note').value.trim();
-  const who=state.mode==='her'?'Her':'Him';
-  state.moodLog.unshift({id:Date.now(),emoji:selectedMood.emoji,label:selectedMood.label,note,who,date:todayKey(),time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})});
-  if(state.moodLog.length>80)state.moodLog=state.moodLog.slice(0,80);
-  document.getElementById('mood-note').value='';
-  selectedMood=null;document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
-  save();renderMood();
+
+function logMood(who){
+  if(!selectedMood[who]) return;
+  const noteEl = document.getElementById(`${who}-mood-note`);
+  const note = noteEl ? noteEl.value.trim() : '';
+  const label = who === 'his' ? 'Him' : 'Her';
+  state.moodLog.unshift({
+    id: Date.now(),
+    emoji: selectedMood[who].emoji,
+    label: selectedMood[who].label,
+    note, who: label,
+    date: todayKey(),
+    time: new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})
+  });
+  if(state.moodLog.length > 80) state.moodLog = state.moodLog.slice(0,80);
+  if(noteEl) noteEl.value = '';
+  selectedMood[who] = null;
+  const grid = document.getElementById(`${who}-mood-grid`);
+  if(grid) grid.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  save(); renderMood();
 }
+
 function renderMood(){
-  const el=document.getElementById('mood-history');if(!el)return;
-  el.innerHTML=state.moodLog.length?state.moodLog.slice(0,20).map(m=>`
-    <div class="mood-log-item">
+  // Notes — both directions
+  const cnh  = document.getElementById('checkin-note-his');
+  const cnhv = document.getElementById('checkin-note-his-view');
+  const cnr  = document.getElementById('checkin-note-her');
+  const cnrv = document.getElementById('checkin-note-her-view');
+  if(cnh  && state.notes['checkin-note-his']) cnh.value  = state.notes['checkin-note-his'];
+  if(cnhv) cnhv.textContent = state.notes['checkin-note-his'] || '—';
+  if(cnr  && state.notes['checkin-note-her']) cnr.value  = state.notes['checkin-note-her'];
+  if(cnrv) cnrv.textContent = state.notes['checkin-note-her'] || '—';
+
+  // Latest mood snapshots — each sees the other's most recent
+  const hisLatest = state.moodLog.find(m => m.who === 'Him');
+  const herLatest = state.moodLog.find(m => m.who === 'Her');
+
+  const hisSeeHer = document.getElementById('his-see-her-checkin');
+  if(hisSeeHer){
+    hisSeeHer.innerHTML = herLatest
+      ? `<span style="font-size:24px;">${herLatest.emoji}</span> <strong>${herLatest.label}</strong>${herLatest.note ? ` <span style="color:var(--text-dim);font-style:italic;">— ${herLatest.note}</span>` : ''} <span style="font-size:11px;color:var(--muted);margin-left:6px;">${herLatest.date} ${herLatest.time}</span>`
+      : 'She hasn&#39;t logged yet today.';
+  }
+  const herSeeHis = document.getElementById('her-see-his-checkin');
+  if(herSeeHis){
+    herSeeHis.innerHTML = hisLatest
+      ? `<span style="font-size:24px;">${hisLatest.emoji}</span> <strong>${hisLatest.label}</strong>${hisLatest.note ? ` <span style="color:var(--text-dim);font-style:italic;">— ${hisLatest.note}</span>` : ''} <span style="font-size:11px;color:var(--muted);margin-left:6px;">${hisLatest.date} ${hisLatest.time}</span>`
+      : 'He hasn&#39;t logged yet today.';
+  }
+
+  // Shared history
+  const el = document.getElementById('mood-history'); if(!el) return;
+  el.innerHTML = state.moodLog.length ? state.moodLog.slice(0,30).map(m => {
+    const isHis = m.who === 'Him';
+    const col = isHis ? 'var(--gold)' : 'var(--rose)';
+    const icon = isHis ? '👤' : '🌸';
+    return `<div class="mood-log-item">
       <span style="font-size:18px;">${m.emoji}</span>
-      <span style="font-size:11px;background:rgba(74,82,112,.3);border-radius:3px;padding:1px 6px;color:var(--text-dim);">${m.who||'—'}</span>
+      <span style="font-size:11px;background:rgba(74,82,112,.3);border-radius:3px;padding:1px 6px;color:${col};">${icon} ${m.who||'—'}</span>
       <span style="font-size:13px;font-weight:600;">${m.label}</span>
-      ${m.note?`<span style="font-size:12px;color:var(--text-dim);font-style:italic;">— ${m.note}</span>`:''}
+      ${m.note ? `<span style="font-size:12px;color:var(--text-dim);font-style:italic;">— ${m.note}</span>` : ''}
       <span class="mood-log-date" style="margin-left:auto;">${m.date} ${m.time}</span>
-    </div>`).join(''):'<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">No check-ins yet.</div>';
-  // her message
-  ['her-message-to-him','conflict-notes'].forEach(k=>{const e=document.getElementById(k);if(e&&state.notes[k])e.value=state.notes[k];});
+    </div>`;
+  }).join('') : '<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">No check-ins yet — start today.</div>';
+
   syncHerView();
 }
 
@@ -1407,6 +1822,7 @@ load();
 // After local load, pull latest from Airtable (non-blocking)
 (async () => {
   await syncPull();
+  initMilestones();
   refreshAll();
   updateDate();
 })();
@@ -1416,6 +1832,185 @@ if(state.mode==='her'){document.body.classList.add('her-mode');document.getEleme
 loadNotes();
 renderOverview();renderLove();renderIbadah();renderDates();renderGifts();renderMood();
 syncHerView();
+
+// ══════════════════════════════════════════════════════
+// SLEEP TRACKER
+// ══════════════════════════════════════════════════════
+let selectedSleepQ = { his: null, her: null };
+
+function selectSleepQ(who, val, el){
+  selectedSleepQ[who] = val;
+  const grid = document.getElementById(`${who}-q-grid`);
+  if(grid) grid.querySelectorAll('.sleep-q-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function calcDuration(bed, wake){
+  if(!bed || !wake) return null;
+  const [bh,bm] = bed.split(':').map(Number);
+  const [wh,wm] = wake.split(':').map(Number);
+  let mins = (wh*60+wm) - (bh*60+bm);
+  if(mins < 0) mins += 24*60;
+  return mins;
+}
+
+function fmtDur(mins){
+  if(mins == null || isNaN(mins)) return '—';
+  const h = Math.floor(mins/60), m = mins%60;
+  return m ? `${h}h ${m}m` : `${h}h`;
+}
+
+function updateSleepCalc(who){
+  const bed  = document.getElementById(`sl-${who}-bed`)?.value;
+  const wake = document.getElementById(`sl-${who}-wake`)?.value;
+  const el   = document.getElementById(`sl-${who}-calc`);
+  if(el) el.textContent = calcDuration(bed,wake) != null ? fmtDur(calcDuration(bed,wake)) : '';
+}
+
+function saveSleepGoal(){
+  const bed  = document.getElementById('sl-goal-bed')?.value  || '22:00';
+  const wake = document.getElementById('sl-goal-wake')?.value || '06:00';
+  state.notes['sleep-goal-bed']  = bed;
+  state.notes['sleep-goal-wake'] = wake;
+  save();
+  updateGoalDisplay();
+}
+
+function updateGoalDisplay(){
+  const bed  = state.notes['sleep-goal-bed']  || '22:00';
+  const wake = state.notes['sleep-goal-wake'] || '06:00';
+  const dur  = calcDuration(bed, wake);
+  const el   = document.getElementById('sl-goal-hrs');
+  if(el && dur != null) el.textContent = `Goal: ${fmtDur(dur)} of sleep`;
+  // Her side read-only display
+  const hd = document.getElementById('sl-goal-display');
+  if(hd) hd.textContent = dur != null ? `${bed} → ${wake} (${fmtDur(dur)})` : '—';
+}
+
+function logSleep(who){
+  const bed  = document.getElementById(`sl-${who}-bed`)?.value;
+  const wake = document.getElementById(`sl-${who}-wake`)?.value;
+  if(!bed || !wake){ alert('Please set both bedtime and wake time.'); return; }
+  const dur  = calcDuration(bed, wake);
+  const note = document.getElementById(`sl-${who}-note-inp`)?.value.trim() || '';
+  const key  = who === 'his' ? 'hisSleep' : 'herSleep';
+  state[key] = state[key] || [];
+  state[key].unshift({ id: Date.now(), date: todayKey(), bed, wake, dur, quality: selectedSleepQ[who]||3, note });
+  if(state[key].length > 60) state[key] = state[key].slice(0,60);
+  // Reset form
+  selectedSleepQ[who] = null;
+  const grid = document.getElementById(`${who}-q-grid`);
+  if(grid) grid.querySelectorAll('.sleep-q-btn').forEach(b => b.classList.remove('selected'));
+  const ni = document.getElementById(`sl-${who}-note-inp`);
+  if(ni) ni.value = '';
+  save(); renderSleep();
+}
+
+function deleteSleepEntry(who, id){
+  const key = who === 'his' ? 'hisSleep' : 'herSleep';
+  state[key] = (state[key]||[]).filter(e => e.id !== id);
+  save(); renderSleep();
+}
+
+const Q_COLORS = {1:'#C4868A',2:'#C8A96E',3:'#8A8FA8',4:'#7BA68A',5:'#6B9FC4'};
+const Q_LABELS = {1:'Poor',2:'Fair',3:'Okay',4:'Good',5:'Great'};
+const Q_ICONS  = {1:'😫',2:'😔',3:'😐',4:'😊',5:'😴'};
+
+function sleepStats(log){
+  const week = (log||[]).slice(0,7);
+  const avg  = week.length ? Math.round(week.reduce((s,e)=>s+(e.dur||0),0)/week.length) : null;
+  let streak = 0;
+  for(const e of (log||[])){ if((e.quality||0)>=4||(e.dur||0)>=420) streak++; else break; }
+  return { avg, last: (log||[])[0]?.dur ?? null, streak };
+}
+
+function renderSleep(){
+  const his = state.hisSleep || [];
+  const her = state.herSleep || [];
+
+  // Stats
+  const hs = sleepStats(his), hr = sleepStats(her);
+  document.getElementById('sl-his-avg').textContent    = hs.avg  ? fmtDur(hs.avg)  : '—';
+  document.getElementById('sl-his-last').textContent   = hs.last != null ? fmtDur(hs.last) : '—';
+  document.getElementById('sl-his-streak').textContent = hs.streak;
+  document.getElementById('sl-her-avg').textContent    = hr.avg  ? fmtDur(hr.avg)  : '—';
+  document.getElementById('sl-her-last').textContent   = hr.last != null ? fmtDur(hr.last) : '—';
+  document.getElementById('sl-her-streak').textContent = hr.streak;
+
+  // Goal pickers
+  const gb = document.getElementById('sl-goal-bed');
+  const gw = document.getElementById('sl-goal-wake');
+  if(gb && state.notes['sleep-goal-bed'])  gb.value = state.notes['sleep-goal-bed'];
+  if(gw && state.notes['sleep-goal-wake']) gw.value = state.notes['sleep-goal-wake'];
+  updateGoalDisplay();
+
+  // Notes — both directions
+  const snh  = document.getElementById('sleep-note-his');
+  const snhv = document.getElementById('sleep-note-his-view');
+  const snr  = document.getElementById('sleep-note-her');
+  const snrv = document.getElementById('sleep-note-her-view');
+  if(snh  && state.notes['sleep-note-his']) snh.value  = state.notes['sleep-note-his'];
+  if(snhv) snhv.textContent = state.notes['sleep-note-his'] || '—';
+  if(snr  && state.notes['sleep-note-her']) snr.value  = state.notes['sleep-note-her'];
+  if(snrv) snrv.textContent = state.notes['sleep-note-her'] || '—';
+
+  // Comparison log
+  const list = document.getElementById('sleep-compare-list');
+  if(!list) return;
+
+  // Build a unified date list from both logs
+  const allDates = [...new Set([...his.map(e=>e.date), ...her.map(e=>e.date)])].sort().reverse();
+  if(!allDates.length){
+    list.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">No sleep logged yet — start tonight.</div>';
+    return;
+  }
+
+  list.innerHTML = allDates.slice(0,14).map(date => {
+    const h = his.find(e=>e.date===date);
+    const r = her.find(e=>e.date===date);
+    const d = new Date(date+'T12:00:00');
+    const label = d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    const maxDur = 480; // 8hrs reference
+
+    const hisBar = h ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+      <span style="font-size:11px;color:var(--gold);min-width:20px;">👤</span>
+      <div style="flex:1;background:var(--border);border-radius:99px;height:6px;overflow:hidden;">
+        <div style="width:${Math.min(100,Math.round(((h.dur||0)/maxDur)*100))}%;height:100%;border-radius:99px;background:var(--gold);"></div>
+      </div>
+      <span style="font-size:12px;color:var(--gold);min-width:40px;">${fmtDur(h.dur)}</span>
+      <span style="font-size:14px;" title="${Q_LABELS[h.quality]||''}">${Q_ICONS[h.quality]||''}</span>
+      ${h.note?`<span style="font-size:11px;color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${h.note}</span>`:''}
+      <button class="gift-del-btn" onclick="deleteSleepEntry('his',${h.id})">✕</button>
+    </div>` : `<div style="font-size:11px;color:var(--muted);margin-bottom:6px;">👤 Not logged</div>`;
+
+    const herBar = r ? `<div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:11px;color:var(--rose);min-width:20px;">🌸</span>
+      <div style="flex:1;background:var(--border);border-radius:99px;height:6px;overflow:hidden;">
+        <div style="width:${Math.min(100,Math.round(((r.dur||0)/maxDur)*100))}%;height:100%;border-radius:99px;background:var(--rose);"></div>
+      </div>
+      <span style="font-size:12px;color:var(--rose);min-width:40px;">${fmtDur(r.dur)}</span>
+      <span style="font-size:14px;" title="${Q_LABELS[r.quality]||''}">${Q_ICONS[r.quality]||''}</span>
+      ${r.note?`<span style="font-size:11px;color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.note}</span>`:''}
+      <button class="gift-del-btn" onclick="deleteSleepEntry('her',${r.id})">✕</button>
+    </div>` : `<div style="font-size:11px;color:var(--muted);">🌸 Not logged</div>`;
+
+    return `<div style="padding:12px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;">${label}</div>
+      ${hisBar}${herBar}
+    </div>`;
+  }).join('');
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  ['his','her'].forEach(who => {
+    document.getElementById(`sl-${who}-bed`)?.addEventListener('input',  ()=>updateSleepCalc(who));
+    document.getElementById(`sl-${who}-wake`)?.addEventListener('input', ()=>updateSleepCalc(who));
+  });
+  updateSleepCalc('his');
+  updateSleepCalc('her');
+});
+// ══════════════════════════════════════════════════════
+
 </script>
 <!-- ── SYNC SETTINGS MODAL ── -->
 <div class="sync-modal-overlay" id="sync-modal">
