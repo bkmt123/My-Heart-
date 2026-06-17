@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Our Dashboard — A Husband's Promise</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Amiri:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0B0E14;--surface:#111520;--card:#161B27;--border:#222840;
+  --gold:#C8A96E;--gold-soft:#E8D5A8;--sage:#7BA68A;--rose:#C4868A;--sky:#6B9FC4;--purple:#A478C8;
+  --muted:#4A5270;--text:#EAE8E0;--text-dim:#8A8FA8;
+  --display:'Cormorant Garamond',serif;--arabic:'Amiri',serif;--body:'Inter',sans-serif;
+}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;font-size:14px;line-height:1.6;}
+
+/* ── TOP BAR ── */
+.top-bar{height:4px;background:linear-gradient(90deg,transparent,var(--gold) 20%,var(--gold-soft) 50%,var(--gold) 80%,transparent);opacity:.6;}
+
+/* ── HEADER ── */
+header{position:relative;padding:32px 36px 24px;border-bottom:1px solid var(--border);overflow:hidden;}
+.header-bg{position:absolute;inset:0;background-image:radial-gradient(circle at 80% 50%,rgba(200,169,110,.06) 0%,transparent 60%),radial-gradient(circle at 20% 50%,rgba(123,166,138,.04) 0%,transparent 50%);pointer-events:none;}
+.star-cluster{position:absolute;right:200px;top:50%;transform:translateY(-50%);opacity:.15;display:flex;gap:10px;align-items:center;}
+.star-8{width:48px;height:48px;background:conic-gradient(var(--gold) 0deg 45deg,transparent 45deg 90deg,var(--gold) 90deg 135deg,transparent 135deg 180deg,var(--gold) 180deg 225deg,transparent 225deg 270deg,var(--gold) 270deg 315deg,transparent 315deg 360deg);clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+.star-8.sm{width:30px;height:30px;}.star-8.xs{width:18px;height:18px;}
+.header-content{position:relative;}
+.header-bismillah{font-family:var(--arabic);font-size:17px;color:var(--gold);margin-bottom:7px;opacity:.85;}
+.header-title{font-family:var(--display);font-size:33px;font-weight:600;letter-spacing:-.01em;line-height:1.1;}
+.header-title em{color:var(--gold);font-style:italic;}
+.header-sub{font-family:var(--display);font-style:italic;font-size:13px;color:var(--text-dim);margin-top:5px;}
+.header-meta{position:absolute;right:0;top:0;text-align:right;}
+#live-date{color:var(--gold);font-size:12px;font-family:var(--body);}
+#day-count{font-family:var(--display);font-style:italic;font-size:13px;color:var(--gold-soft);margin-top:3px;}
+
+/* ── MODE SWITCHER ── */
+.mode-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 36px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.mode-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+.mode-toggle{display:flex;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.mode-btn{padding:7px 20px;font-size:12px;font-weight:600;border:none;background:transparent;color:var(--text-dim);cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
+.mode-btn.active-his{background:var(--gold);color:#0B0E14;}
+.mode-btn.active-her{background:var(--rose);color:#fff;}
+.mode-indicator{margin-left:auto;font-family:var(--display);font-style:italic;font-size:14px;}
+.mode-indicator.his{color:var(--gold);}
+.mode-indicator.her{color:var(--rose);}
+
+/* ── NAV ── */
+nav{display:flex;gap:2px;padding:10px 36px 0;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;background:var(--surface);}
+nav::-webkit-scrollbar{display:none;}
+.tab{font-family:var(--body);font-size:12px;font-weight:500;padding:8px 16px 10px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.tab-locked{display:flex;align-items:center;gap:5px;}
+.lock-icon{font-size:11px;opacity:.6;}
+
+/* ── MAIN ── */
+main{padding:28px 36px;max-width:1200px;}
+.panel{display:none;}.panel.active{display:block;}
+
+/* ── HER VIEW badge ── */
+.her-only{display:none;}
+.her-mode .her-only{display:block;}
+.his-only{display:block;}
+.her-mode .his-only{display:none;}
+
+/* ── SECTION HEAD ── */
+.section-head{margin-bottom:20px;}
+.section-head h2{font-family:var(--display);font-size:26px;font-weight:600;}
+.section-head h2 em{color:var(--gold);font-style:italic;}
+.section-eyebrow{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+
+/* ── GRIDS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+@media(max-width:900px){.grid-3,.grid-4{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}
+  main{padding:18px 14px;}header{padding:22px 14px 18px;}
+  nav,.mode-bar{padding-left:14px;padding-right:14px;}
+  .header-title{font-size:24px;}.star-cluster{display:none;}
+}
+
+/* ── CARD ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.card-eyebrow{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.card-accent-top{border-top:2px solid var(--gold);}
+.card-accent-sage{border-top:2px solid var(--sage);}
+.card-accent-rose{border-top:2px solid var(--rose);}
+.card-accent-sky{border-top:2px solid var(--sky);}
+
+/* ── STAT ── */
+.stat-block{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;display:flex;flex-direction:column;gap:5px;}
+.stat-val{font-family:var(--display);font-size:34px;font-weight:600;line-height:1;}
+.stat-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);}
+.c-gold{color:var(--gold);}.c-sage{color:var(--sage);}.c-rose{color:var(--rose);}.c-sky{color:var(--sky);}
+
+/* ── INPUTS ── */
+.inp{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:9px 13px;font-family:var(--body);font-size:13px;color:var(--text);outline:none;transition:border-color .15s;width:100%;}
+.inp:focus{border-color:var(--gold);}
+.inp::placeholder{color:var(--muted);}
+select.inp{cursor:pointer;}
+textarea.inp{resize:vertical;min-height:80px;line-height:1.6;}
+.note-area{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:10px 13px;font-family:var(--display);font-style:italic;font-size:13px;color:var(--text);resize:vertical;min-height:90px;width:100%;outline:none;line-height:1.7;transition:border-color .15s;}
+.note-area:focus{border-color:var(--gold);}
+.note-area::placeholder{color:var(--muted);}
+
+/* ── BUTTONS ── */
+.btn{background:var(--gold);color:#0B0E14;border:none;border-radius:7px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+.btn:hover{opacity:.85;}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:7px;padding:7px 14px;font-size:12px;cursor:pointer;transition:all .15s;}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+.btn-rose{background:var(--rose);color:#fff;}
+.btn-sage{background:var(--sage);color:#0B0E14;}
+.btn-sm{padding:5px 12px;font-size:11px;}
+
+/* ── LOVE LANGUAGES ── */
+.ll-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.ll-row:last-child{border-bottom:none;}
+.ll-icon{font-size:18px;min-width:28px;text-align:center;}
+.ll-name{flex:1;font-family:var(--display);font-size:15px;font-weight:600;}
+.ll-bar-track{height:5px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:4px;}
+.ll-bar-fill{height:100%;border-radius:99px;transition:width .5s ease;}
+.ll-score{font-size:11px;color:var(--text-dim);min-width:24px;text-align:right;}
+.ll-btn{font-size:15px;background:none;border:none;cursor:pointer;opacity:.5;transition:opacity .15s,transform .1s;}
+.ll-btn:hover{opacity:1;transform:scale(1.2);}
+
+/* ── PRAYER ── */
+.prayer-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.prayer-row:last-child{border-bottom:none;}
+.prayer-name{font-family:var(--display);font-size:14px;font-weight:600;flex:1;}
+.prayer-check{width:20px;height:20px;border:2px solid var(--border);border-radius:5px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.prayer-check.done{background:var(--sage);border-color:var(--sage);}
+.prayer-check.done::after{content:'✓';font-size:11px;color:#0B0E14;font-weight:700;}
+.prayer-note{font-size:11px;color:var(--muted);font-style:italic;}
+
+/* ── MOOD ── */
+.mood-grid{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.mood-btn{font-size:20px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;cursor:pointer;transition:all .15s;}
+.mood-btn:hover{border-color:var(--gold);transform:scale(1.05);}
+.mood-btn.selected{border-color:var(--rose);background:rgba(196,134,138,.12);}
+.mood-label{font-size:9px;display:block;text-align:center;color:var(--text-dim);margin-top:2px;}
+.mood-log-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.mood-log-item:last-child{border-bottom:none;}
+.mood-log-date{font-size:11px;color:var(--muted);min-width:70px;}
+
+/* ── DATE NIGHTS ── */
+.date-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px;animation:fadeIn .2s ease;}
+.date-title-el{font-family:var(--display);font-size:15px;font-weight:600;margin-bottom:2px;}
+.date-note-el{font-size:12px;color:var(--text-dim);}
+.date-status-badge{font-size:10px;letter-spacing:.08em;padding:2px 8px;border-radius:3px;margin-left:auto;flex-shrink:0;}
+.ds-idea{background:rgba(74,82,112,.2);color:var(--muted);}
+.ds-planned{background:rgba(107,159,196,.12);color:var(--sky);}
+.ds-done{background:rgba(123,166,138,.12);color:var(--sage);}
+.date-footer{display:flex;gap:8px;margin-top:10px;align-items:center;}
+.date-when-el{font-size:11px;color:var(--muted);flex:1;font-style:italic;}
+
+/* ── GIFT ── */
+.gift-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);animation:fadeIn .2s ease;}
+.gift-item:last-child{border-bottom:none;}
+.gift-name{flex:1;font-size:13px;}
+.gift-bought{text-decoration:line-through;color:var(--muted);}
+.gift-cat-badge{font-size:10px;padding:2px 8px;border-radius:3px;}
+.gift-check-btn{background:none;border:none;cursor:pointer;font-size:14px;opacity:.5;transition:opacity .15s;}
+.gift-check-btn:hover{opacity:1;}
+.gift-del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;}
+.gift-del-btn:hover{color:var(--rose);}
+
+/* ── MILESTONE ── */
+.ml-row{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.ml-row:last-child{border-bottom:none;}
+.ml-dot-col{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.ml-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;margin-top:3px;}
+.ml-dot.done{background:var(--sage);border-color:var(--sage);}
+.ml-dot.active{background:var(--gold);border-color:var(--gold);}
+.ml-dot.future{border-color:var(--muted);}
+.ml-vline{width:1px;flex:1;background:var(--border);min-height:14px;}
+.ml-title-el{font-family:var(--display);font-size:14px;font-weight:600;margin-bottom:2px;}
+.ml-date-el{font-size:10px;color:var(--muted);letter-spacing:.08em;margin-bottom:3px;}
+.ml-note-el{font-size:12px;color:var(--text-dim);}
+
+/* ── AYAH BOX ── */
+.ayah-box{background:linear-gradient(135deg,rgba(200,169,110,.07),rgba(123,166,138,.05));border:1px solid rgba(200,169,110,.2);border-radius:10px;padding:22px 24px;text-align:center;}
+.ayah-arabic{font-family:var(--arabic);font-size:22px;line-height:1.8;color:var(--gold-soft);direction:rtl;margin-bottom:12px;}
+.ayah-trans{font-family:var(--display);font-style:italic;font-size:14px;color:var(--text-dim);line-height:1.7;}
+.ayah-ref{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:10px;}
+
+/* ── REMINDER BANNER ── */
+.reminder-banner{background:linear-gradient(90deg,rgba(200,169,110,.1),rgba(123,166,138,.08));border:1px solid rgba(200,169,110,.25);border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:20px;}
+.reminder-text{font-family:var(--display);font-style:italic;font-size:15px;color:var(--gold-soft);}
+
+/* ── HER MESSAGE BOX ── */
+.her-message-box{background:linear-gradient(135deg,rgba(196,134,138,.08),rgba(164,120,200,.05));border:1px solid rgba(196,134,138,.25);border-radius:10px;padding:20px 24px;margin-bottom:20px;}
+.her-message-title{font-family:var(--display);font-size:20px;font-weight:600;color:var(--rose);margin-bottom:8px;}
+.her-message-body{font-family:var(--display);font-style:italic;font-size:14px;color:var(--text-dim);line-height:1.8;}
+
+/* ── LOCKED SCREEN ── */
+.lock-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;}
+.lock-icon-big{font-size:56px;margin-bottom:20px;animation:gentlePulse 2.5s ease-in-out infinite;}
+.lock-title{font-family:var(--display);font-size:28px;font-weight:600;color:var(--gold);margin-bottom:8px;}
+.lock-sub{font-family:var(--display);font-style:italic;font-size:14px;color:var(--text-dim);margin-bottom:28px;max-width:360px;}
+.pin-display{display:flex;gap:10px;justify-content:center;margin-bottom:20px;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);transition:all .2s;}
+.pin-dot.filled{background:var(--gold);border-color:var(--gold);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto;}
+.pin-key{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:var(--display);font-size:22px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--text);}
+.pin-key:hover{border-color:var(--gold);color:var(--gold);background:rgba(200,169,110,.08);}
+.pin-key:active{transform:scale(.95);}
+.pin-key.zero{grid-column:2;}
+.pin-key.back{font-size:16px;color:var(--muted);}
+.pin-key.back:hover{border-color:var(--rose);color:var(--rose);}
+.pin-error{color:var(--rose);font-size:12px;margin-top:10px;min-height:18px;font-family:var(--body);}
+
+/* ── SURPRISE CARD ── */
+.surprise-card{background:var(--surface);border:1px solid rgba(200,169,110,.2);border-radius:10px;padding:16px;margin-bottom:12px;animation:fadeIn .25s ease;position:relative;overflow:hidden;}
+.surprise-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.sc-date::before{background:var(--gold);}
+.sc-gift::before{background:var(--rose);}
+.sc-exp::before{background:var(--purple);}
+.surprise-type{font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;}
+.surprise-title-el{font-family:var(--display);font-size:16px;font-weight:600;margin-bottom:4px;}
+.surprise-detail{font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:8px;}
+.surprise-footer{display:flex;align-items:center;gap:8px;padding-top:8px;border-top:1px solid var(--border);}
+.surprise-when{font-size:11px;color:var(--muted);flex:1;font-style:italic;}
+.surprise-status-badge{font-size:10px;padding:2px 8px;border-radius:3px;letter-spacing:.06em;}
+.ss-planning{background:rgba(107,159,196,.12);color:var(--sky);}
+.ss-ready{background:rgba(200,169,110,.12);color:var(--gold);}
+.ss-done{background:rgba(123,166,138,.12);color:var(--sage);}
+
+/* ── DUA SECTION ── */
+.dua-item{padding:12px 0;border-bottom:1px solid var(--border);}
+.dua-item:last-child{border-bottom:none;}
+.dua-title-el{font-family:var(--display);font-size:14px;font-weight:600;margin-bottom:3px;}
+.dua-body{font-size:13px;color:var(--text-dim);line-height:1.6;}
+
+/* ── MISC ── */
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.col{display:flex;flex-direction:column;gap:14px;}
+.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}.mt20{margin-top:20px;}
+.mb12{margin-bottom:12px;}.mb16{margin-bottom:16px;}.mb20{margin-bottom:20px;}
+.divider{margin:18px 0;border:none;border-top:1px solid var(--border);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px);}to{opacity:1;transform:none;}}
+@keyframes gentlePulse{0%,100%{opacity:.6;}50%{opacity:1;}}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+.shake{animation:shake .35s ease;}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:26px;width:100%;max-width:440px;}
+.modal h3{font-family:var(--display);font-size:22px;font-weight:600;margin-bottom:18px;color:var(--gold);}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:13px;}
+.field label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-dim);}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+
+/* ── HER SECTION TINT ── */
+.her-mode .card-accent-top{border-top-color:var(--rose);}
+.her-mode .tab.active{color:var(--rose);border-bottom-color:var(--rose);}
+.her-mode .btn{background:var(--rose);color:#fff;}
+.her-mode .inp:focus,.her-mode .note-area:focus{border-color:var(--rose);}
+</style>
+</head>
+<body>
+<div class="top-bar"></div>
+
+<header>
+  <div class="header-bg"></div>
+  <div class="star-cluster">
+    <div class="star-8 xs"></div><div class="star-8 sm"></div><div class="star-8"></div><div class="star-8 sm"></div><div class="star-8 xs"></div>
+  </div>
+  <div class="header-content">
+    <div class="header-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+    <div class="header-title">Our <em>Dashboard</em> — A Husband's Promise</div>
+    <div class="header-sub">"And He placed between you affection and mercy." — Ar-Rum 30:21</div>
+  </div>
+  <div class="header-meta" style="position:absolute;right:36px;top:32px;">
+    <div id="live-date">—</div>
+    <div id="day-count"></div>
+  </div>
+</header>
+
+<!-- MODE SWITCHER -->
+<div class="mode-bar">
+  <span class="mode-label">Viewing as:</span>
+  <div class="mode-toggle">
+    <button class="mode-btn active-his" id="his-btn" onclick="setMode('his')">👤 His Side</button>
+    <button class="mode-btn" id="her-btn" onclick="setMode('her')">🌸 Her Side</button>
+  </div>
+  <div class="mode-indicator his" id="mode-indicator">Planning with love ✦</div>
+</div>
+
+<nav id="main-nav">
+  <button class="tab active" data-tab="overview" onclick="switchTab(this,'overview')">Overview</button>
+  <button class="tab" data-tab="love" onclick="switchTab(this,'love')">Love Languages</button>
+  <button class="tab" data-tab="ibadah" onclick="switchTab(this,'ibadah')">Ibadah Together</button>
+  <button class="tab" data-tab="dates" onclick="switchTab(this,'dates')">Date Nights</button>
+  <button class="tab" data-tab="gifts" onclick="switchTab(this,'gifts')">Gifts</button>
+  <button class="tab" data-tab="mood" onclick="switchTab(this,'mood')">Check-In</button>
+  <button class="tab" data-tab="vision" onclick="switchTab(this,'vision')">Life Vision</button>
+  <button class="tab tab-locked" data-tab="surprises" onclick="switchTab(this,'surprises')"><span class="lock-icon">🔒</span> Surprises</button>
+</nav>
+
+<main id="main-body">
+
+<!-- ══════════ OVERVIEW ══════════ -->
+<div class="panel active" id="panel-overview">
+
+  <!-- HIS VIEW -->
+  <div class="his-only">
+    <div class="reminder-banner">
+      <div style="font-size:20px;">🌙</div>
+      <div class="reminder-text" id="reminder-text">Loading…</div>
+    </div>
+  </div>
+
+  <!-- HER VIEW welcome -->
+  <div class="her-only">
+    <div class="her-message-box" id="her-welcome-box">
+      <div class="her-message-title" id="her-welcome-title">As-salamu alayki, habibti 🌸</div>
+      <div class="her-message-body" id="her-daily-msg">Loading your message for today…</div>
+    </div>
+  </div>
+
+  <div class="grid-4 mb20">
+    <div class="stat-block"><span class="stat-val c-gold" id="ov-ll-score">—</span><span class="stat-label">Love Score Today</span></div>
+    <div class="stat-block"><span class="stat-val c-sage" id="ov-prayers">0/5</span><span class="stat-label">Prayers Together</span></div>
+    <div class="stat-block"><span class="stat-val c-rose" id="ov-dates">0</span><span class="stat-label">Dates Planned</span></div>
+    <div class="stat-block"><span class="stat-val c-sky" id="ov-gifts">0</span><span class="stat-label">Gift Ideas</span></div>
+  </div>
+
+  <div class="grid-2 mb20">
+    <div>
+      <div class="section-eyebrow mb12">Ayah of the day</div>
+      <div class="ayah-box">
+        <div class="ayah-arabic" id="ayah-arabic">وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً</div>
+        <div class="ayah-trans" id="ayah-trans">"And of His signs is that He created for you from yourselves mates that you may find tranquillity in them; and He placed between you affection and mercy."</div>
+        <div class="ayah-ref" id="ayah-ref">Surah Ar-Rum · 30:21</div>
+      </div>
+    </div>
+    <div class="col">
+      <!-- HIS: intention for her -->
+      <div class="card card-accent-top his-only">
+        <div class="card-eyebrow">My intention for her today</div>
+        <textarea class="note-area" id="intention-today" placeholder="What will I do today to make her feel loved?…" oninput="saveNote('intention-today')"></textarea>
+      </div>
+      <!-- HER: see his message to her -->
+      <div class="card card-accent-rose her-only">
+        <div class="card-eyebrow">A message from your husband</div>
+        <div id="her-see-intention" style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--text-dim);line-height:1.8;min-height:60px;padding:4px 0;">—</div>
+      </div>
+      <div class="card card-accent-sage">
+        <div class="card-eyebrow his-only">Something I appreciate about her</div>
+        <div class="card-eyebrow her-only">He appreciates this about you today</div>
+        <div class="his-only"><textarea class="note-area" id="appreciate-today" placeholder="Name one thing you're grateful for about her…" style="min-height:70px;" oninput="saveNote('appreciate-today')"></textarea></div>
+        <div class="her-only" id="her-see-appreciate" style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--gold-soft);line-height:1.8;min-height:50px;padding:4px 0;">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-eyebrow">Love Languages — This Week</div>
+    <div id="ov-ll-summary"></div>
+  </div>
+</div>
+
+<!-- ══════════ LOVE LANGUAGES ══════════ -->
+<div class="panel" id="panel-love">
+  <div class="section-head">
+    <div class="section-eyebrow">Intentional Love</div>
+    <h2>Her <em>Love Languages</em></h2>
+  </div>
+  <div class="grid-2 mb20">
+    <div class="card card-accent-top">
+      <div class="card-eyebrow his-only">Today's Score — tap + to log an act</div>
+      <div class="card-eyebrow her-only">How he's been loving you today</div>
+      <div id="ll-tracker"></div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <div class="card-eyebrow">Ideas for Each Language</div>
+        <div style="font-size:13px;color:var(--text-dim);line-height:1.9;">
+          <div>💬 <strong style="color:var(--text);">Words</strong> — Morning text, handwritten note, voice memo</div>
+          <div>🤝 <strong style="color:var(--text);">Acts</strong> — Make her tea, handle something she dreads</div>
+          <div>🎁 <strong style="color:var(--text);">Gifts</strong> — Thoughtful not expensive. A flower, her snack</div>
+          <div>⏱️ <strong style="color:var(--text);">Time</strong> — Phone away, a walk, just sitting together</div>
+          <div>🤗 <strong style="color:var(--text);">Touch</strong> — Hug, hold her hand, a gentle shoulder touch</div>
+        </div>
+      </div>
+      <div class="card card-accent-sage his-only">
+        <div class="card-eyebrow">Her Primary Love Language</div>
+        <select class="inp mb12" id="primary-ll" onchange="savePrimaryLL()">
+          <option value="">Not set yet</option>
+          <option value="words">💬 Words of Affirmation</option>
+          <option value="acts">🤝 Acts of Service</option>
+          <option value="gifts">🎁 Gift Giving</option>
+          <option value="time">⏱️ Quality Time</option>
+          <option value="touch">🤗 Physical Touch</option>
+        </select>
+        <div class="card-eyebrow">Her Secondary</div>
+        <select class="inp" id="secondary-ll" onchange="savePrimaryLL()">
+          <option value="">Not set yet</option>
+          <option value="words">💬 Words of Affirmation</option>
+          <option value="acts">🤝 Acts of Service</option>
+          <option value="gifts">🎁 Gift Giving</option>
+          <option value="time">⏱️ Quality Time</option>
+          <option value="touch">🤗 Physical Touch</option>
+        </select>
+      </div>
+      <!-- HER: tell him her love language -->
+      <div class="card card-accent-rose her-only">
+        <div class="card-eyebrow">Tell him what you need most right now</div>
+        <textarea class="note-area" id="her-ll-message" placeholder="Share what kind of love you need most this week…" style="min-height:90px;" oninput="saveNote('her-ll-message')"></textarea>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-eyebrow his-only">Weekly Commitment</div>
+    <div class="card-eyebrow her-only">A note for both of us</div>
+    <textarea class="note-area" id="love-commitment" placeholder="Write a weekly intention together…" oninput="saveNote('love-commitment')"></textarea>
+  </div>
+</div>
+
+<!-- ══════════ IBADAH ══════════ -->
+<div class="panel" id="panel-ibadah">
+  <div class="section-head">
+    <div class="section-eyebrow">Worship Together</div>
+    <h2>Ibadah & <em>Spiritual Life</em></h2>
+  </div>
+  <div class="grid-2 mb20">
+    <div class="card card-accent-top">
+      <div class="card-eyebrow">Today's Salah Together</div>
+      <div id="prayer-list"></div>
+    </div>
+    <div class="card card-accent-sage">
+      <div class="card-eyebrow">Quran & Dhikr</div>
+      <div class="col">
+        <div>
+          <div style="font-family:var(--display);font-size:14px;font-weight:600;margin-bottom:6px;">Quran together this week</div>
+          <input class="inp" id="quran-goal" placeholder="e.g. Surah Al-Baqarah together…" oninput="saveNote('quran-goal')"/>
+        </div>
+        <div>
+          <div style="font-family:var(--display);font-size:14px;font-weight:600;margin-bottom:6px;">Morning Dhikr streak</div>
+          <div class="row">
+            <span class="stat-val c-gold" id="dhikr-streak" style="font-size:28px;">0</span>
+            <span style="font-size:12px;color:var(--text-dim);margin-left:4px;">days</span>
+            <button class="btn btn-sm" onclick="incrementDhikr()" style="margin-left:auto;">+ Day</button>
+            <button class="btn-ghost btn-sm" onclick="resetDhikr()">Reset</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-family:var(--display);font-size:14px;font-weight:600;margin-bottom:6px;" class="his-only">Dua for her</div>
+          <div style="font-family:var(--display);font-size:14px;font-weight:600;margin-bottom:6px;" class="her-only">His dua for you</div>
+          <div class="his-only"><textarea class="note-area" id="dua-for-her" placeholder="Write a personal dua for your wife…" style="min-height:80px;" oninput="saveNote('dua-for-her')"></textarea></div>
+          <div class="her-only" id="her-see-dua" style="font-family:var(--arabic);font-size:16px;color:var(--gold-soft);line-height:1.9;min-height:60px;padding:4px 0;direction:auto;">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-eyebrow">Duas for Spouses — Reference</div>
+    <div class="dua-item">
+      <div class="dua-title-el">For a righteous spouse</div>
+      <div class="dua-body" style="font-family:'Amiri',serif;font-size:17px;direction:rtl;color:var(--gold-soft);margin-bottom:4px;">رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ</div>
+      <div class="dua-body">"Our Lord, grant us from among our wives and offspring comfort to our eyes." — Al-Furqan 25:74</div>
+    </div>
+    <div class="dua-item">
+      <div class="dua-title-el">The Prophet's ﷺ example</div>
+      <div class="dua-body">"The best of you is the one who is best to his wife, and I am the best of you to my wives." — Ibn Majah</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DATE NIGHTS ══════════ -->
+<div class="panel" id="panel-dates">
+  <div class="section-head">
+    <div class="section-eyebrow">Quality Time</div>
+    <h2>Date Nights & <em>Experiences</em></h2>
+  </div>
+  <div class="row mb16">
+    <button class="btn" onclick="openDateModal()">+ Plan a Date</button>
+    <select class="inp" id="date-filter" style="max-width:160px;" onchange="renderDates()">
+      <option value="all">All</option>
+      <option value="idea">Ideas</option>
+      <option value="planned">Planned</option>
+      <option value="done">Completed</option>
+    </select>
+  </div>
+  <div class="grid-2">
+    <div>
+      <div class="card-eyebrow mb12">All Dates</div>
+      <div id="date-list"></div>
+    </div>
+    <div class="col">
+      <div class="card card-accent-rose">
+        <div class="card-eyebrow his-only">Date Night Bucket List</div>
+        <div class="card-eyebrow her-only">Places & experiences we'll share</div>
+        <textarea class="note-area" id="date-bucket" placeholder="Places to go, things to do together…" style="min-height:120px;" oninput="saveNote('date-bucket')"></textarea>
+      </div>
+      <div class="card">
+        <div class="card-eyebrow his-only">Her Preferences & Favorites</div>
+        <div class="card-eyebrow her-only">What I love — so he knows 🌸</div>
+        <textarea class="note-area" id="her-prefs" placeholder="Favorite foods, activities, things that make you smile…" style="min-height:100px;" oninput="saveNote('her-prefs')"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ GIFTS ══════════ -->
+<div class="panel" id="panel-gifts">
+  <div class="section-head">
+    <div class="section-eyebrow">Thoughtful Giving</div>
+    <h2>Gifts & <em>Ideas</em></h2>
+  </div>
+  <div class="card mb16 his-only">
+    <div class="card-eyebrow">Add a Gift Idea</div>
+    <div class="row">
+      <input class="inp" id="gift-inp" placeholder="Gift idea…" style="flex:1;" onkeydown="if(event.key==='Enter')addGift()"/>
+      <select class="inp" id="gift-cat-inp" style="max-width:140px;">
+        <option value="everyday">Everyday Joy</option>
+        <option value="occasion">Occasion</option>
+        <option value="experience">Experience</option>
+        <option value="spiritual">Spiritual</option>
+        <option value="surprise">Surprise</option>
+      </select>
+      <input class="inp" id="gift-budget-inp" placeholder="Budget" style="max-width:100px;"/>
+      <button class="btn" onclick="addGift()">+ Add</button>
+    </div>
+  </div>
+  <!-- HER: wishlist -->
+  <div class="card mb16 her-only">
+    <div class="card-eyebrow">My Wishlist — tell him what you'd love 🌸</div>
+    <div class="row">
+      <input class="inp" id="her-wish-inp" placeholder="Something you'd love…" style="flex:1;" onkeydown="if(event.key==='Enter')addHerWish()"/>
+      <button class="btn btn-rose" onclick="addHerWish()">+ Add Wish</button>
+    </div>
+    <div id="her-wish-list" class="mt12"></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-eyebrow his-only">Gift List</div>
+      <div class="card-eyebrow her-only">Gifts he's thinking about for you</div>
+      <div id="gift-list"></div>
+    </div>
+    <div class="col">
+      <div class="card card-accent-top his-only">
+        <div class="card-eyebrow">Important Dates to Remember</div>
+        <div id="important-dates-list"></div>
+        <div class="row mt12">
+          <input class="inp" id="imp-date-name" placeholder="e.g. Her birthday…" style="flex:1;"/>
+          <input type="date" class="inp" id="imp-date-val" style="max-width:150px;"/>
+          <button class="btn btn-sm" onclick="addImpDate()">+ Add</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-eyebrow his-only">Things She Loves</div>
+        <div class="card-eyebrow her-only">My favorites — for reference 🌸</div>
+        <textarea class="note-area" id="she-loves" placeholder="Favorite brands, colors, scents, hobbies…" style="min-height:100px;" oninput="saveNote('she-loves')"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ CHECK-IN ══════════ -->
+<div class="panel" id="panel-mood">
+  <div class="section-head">
+    <div class="section-eyebrow">Emotional Awareness</div>
+    <h2>Daily <em>Check-In</em></h2>
+  </div>
+  <div class="grid-2 mb20">
+    <div class="card card-accent-top">
+      <div class="card-eyebrow his-only">How does she seem today?</div>
+      <div class="card-eyebrow her-only">How are you feeling today? 🌸</div>
+      <div class="mood-grid">
+        <div onclick="selectMood('😊','Happy')" class="mood-btn"><span>😊</span><span class="mood-label">Happy</span></div>
+        <div onclick="selectMood('😌','At Peace')" class="mood-btn"><span>😌</span><span class="mood-label">At Peace</span></div>
+        <div onclick="selectMood('😔','Tired')" class="mood-btn"><span>😔</span><span class="mood-label">Tired</span></div>
+        <div onclick="selectMood('😢','Sad')" class="mood-btn"><span>😢</span><span class="mood-label">Sad</span></div>
+        <div onclick="selectMood('😤','Stressed')" class="mood-btn"><span>😤</span><span class="mood-label">Stressed</span></div>
+        <div onclick="selectMood('🥰','Loved')" class="mood-btn"><span>🥰</span><span class="mood-label">Loved</span></div>
+        <div onclick="selectMood('😴','Needs Rest')" class="mood-btn"><span>😴</span><span class="mood-label">Needs Rest</span></div>
+        <div onclick="selectMood('✨','Glowing')" class="mood-btn"><span>✨</span><span class="mood-label">Glowing</span></div>
+      </div>
+      <div class="field">
+        <label class="his-only">What she needs from me today</label>
+        <label class="her-only">What I need from him today</label>
+        <input class="inp" id="mood-note" placeholder="e.g. Space, encouragement, a hug…"/>
+      </div>
+      <button class="btn" onclick="logMood()">Log Check-In</button>
+    </div>
+    <div class="col">
+      <div class="card his-only">
+        <div class="card-eyebrow">Reflection Questions — Ask Her</div>
+        <div style="font-size:13px;color:var(--text-dim);line-height:2.1;">
+          <div>✦ How are you feeling, really?</div>
+          <div>✦ Is there anything weighing on you?</div>
+          <div>✦ What would make today better for you?</div>
+          <div>✦ Do you feel heard by me lately?</div>
+          <div>✦ What do you need more of from me?</div>
+          <div>✦ Is there a dream I can help with?</div>
+        </div>
+      </div>
+      <!-- HER: write to him freely -->
+      <div class="card card-accent-rose her-only">
+        <div class="card-eyebrow">A message for him — say anything 🌸</div>
+        <textarea class="note-area" id="her-message-to-him" placeholder="Write what's on your heart. He'll see this…" style="min-height:140px;" oninput="saveNote('her-message-to-him')"></textarea>
+      </div>
+      <div class="card card-accent-sage">
+        <div class="card-eyebrow his-only">Her message to me</div>
+        <div class="card-eyebrow her-only">Communication notes</div>
+        <div class="his-only" id="his-see-her-message" style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--rose);line-height:1.8;min-height:60px;padding:4px 0;">—</div>
+        <div class="her-only"><textarea class="note-area" id="conflict-notes" placeholder="What helps us communicate better…" style="min-height:80px;" oninput="saveNote('conflict-notes')"></textarea></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-eyebrow">Check-In History</div>
+    <div id="mood-history"></div>
+  </div>
+</div>
+
+<!-- ══════════ LIFE VISION ══════════ -->
+<div class="panel" id="panel-vision">
+  <div class="section-head">
+    <div class="section-eyebrow">Together & Forever</div>
+    <h2>Our <em>Life Vision</em></h2>
+  </div>
+  <div class="grid-2 mb20">
+    <div class="card">
+      <div class="card-eyebrow">Marriage Milestones</div>
+      <div class="ml-row"><div class="ml-dot-col"><div class="ml-dot active"></div><div class="ml-vline"></div></div><div><div class="ml-title-el">Marriage — The Foundation</div><div class="ml-date-el">In View · By Allah's Permission</div><div class="ml-note-el">A union built on taqwa, trust, and the intention to enter Jannah together.</div></div></div>
+      <div class="ml-row"><div class="ml-dot-col"><div class="ml-dot future"></div><div class="ml-vline"></div></div><div><div class="ml-title-el">Our First Home Together</div><div class="ml-date-el">Future</div><div class="ml-note-el">A home filled with salah, laughter, and peace.</div></div></div>
+      <div class="ml-row"><div class="ml-dot-col"><div class="ml-dot future"></div><div class="ml-vline"></div></div><div><div class="ml-title-el">Children & Family</div><div class="ml-date-el">Future</div><div class="ml-note-el">Raising righteous, confident children who love Allah.</div></div></div>
+      <div class="ml-row"><div class="ml-dot-col"><div class="ml-dot future"></div><div class="ml-vline"></div></div><div><div class="ml-title-el">Hajj Together</div><div class="ml-date-el">Future</div><div class="ml-note-el">Standing at the Ka'bah side by side. Dua on the plains of Arafah.</div></div></div>
+      <div class="ml-row"><div class="ml-dot-col"><div class="ml-dot future"></div></div><div><div class="ml-title-el">Financial Freedom Together</div><div class="ml-date-el">Future</div><div class="ml-note-el">So she never worries. URD and acquisitions building toward that.</div></div></div>
+    </div>
+    <div class="col">
+      <div class="card card-accent-top">
+        <div class="card-eyebrow his-only">My vision for our marriage</div>
+        <div class="card-eyebrow her-only">Our marriage vision</div>
+        <textarea class="note-area" id="marriage-vision" placeholder="What does our marriage look like at its best?…" style="min-height:110px;" oninput="saveNote('marriage-vision')"></textarea>
+      </div>
+      <div class="card">
+        <div class="card-eyebrow his-only">Her goals — how I'll support them</div>
+        <div class="card-eyebrow her-only">My dreams & goals 🌸</div>
+        <textarea class="note-area" id="her-goals" placeholder="Her ambitions, dreams, growth — how you'll actively support each one…" style="min-height:100px;" oninput="saveNote('her-goals')"></textarea>
+      </div>
+      <div class="card card-accent-sage">
+        <div class="card-eyebrow his-only">A letter to her — unsent</div>
+        <div class="card-eyebrow her-only">A letter to him — unsent 🌸</div>
+        <textarea class="note-area" id="love-letter" placeholder="Write what's in your heart. Just let it flow…" style="min-height:90px;" oninput="saveNote('love-letter')"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SURPRISES (LOCKED) ══════════ -->
+<div class="panel" id="panel-surprises">
+
+  <!-- LOCK SCREEN -->
+  <div id="lock-screen" class="lock-screen">
+    <div class="lock-icon-big">🔐</div>
+    <div class="lock-title">For His Eyes Only</div>
+    <div class="lock-sub">This is where the magic is planned. Enter your code to continue.</div>
+    <div class="pin-display" id="pin-display">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+      <div class="pin-dot" id="pd4"></div>
+    </div>
+    <div class="pin-error" id="pin-error"></div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinPress('1')">1</button>
+      <button class="pin-key" onclick="pinPress('2')">2</button>
+      <button class="pin-key" onclick="pinPress('3')">3</button>
+      <button class="pin-key" onclick="pinPress('4')">4</button>
+      <button class="pin-key" onclick="pinPress('5')">5</button>
+      <button class="pin-key" onclick="pinPress('6')">6</button>
+      <button class="pin-key" onclick="pinPress('7')">7</button>
+      <button class="pin-key" onclick="pinPress('8')">8</button>
+      <button class="pin-key" onclick="pinPress('9')">9</button>
+      <button class="pin-key zero" onclick="pinPress('0')">0</button>
+      <button class="pin-key back" onclick="pinBack()">⌫</button>
+    </div>
+  </div>
+
+  <!-- UNLOCKED CONTENT -->
+  <div id="surprises-content" style="display:none;">
+    <div class="section-head">
+      <div class="section-eyebrow">For His Eyes Only 🔐</div>
+      <h2>Surprise <em>Dates & Gifts</em></h2>
+    </div>
+
+    <div class="row mb20" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="openSurpriseModal('date')">+ Surprise Date</button>
+        <button class="btn" style="background:var(--rose);color:#fff;" onclick="openSurpriseModal('gift')">+ Surprise Gift</button>
+        <button class="btn" style="background:var(--purple);color:#fff;" onclick="openSurpriseModal('exp')">+ Experience</button>
+      </div>
+      <button class="btn-ghost" onclick="lockSurprises()">🔒 Lock</button>
+    </div>
+
+    <div class="grid-4 mb20">
+      <div class="stat-block"><span class="stat-val c-gold" id="s-total">0</span><span class="stat-label">Total Planned</span></div>
+      <div class="stat-block"><span class="stat-val c-sky" id="s-planning">0</span><span class="stat-label">In Planning</span></div>
+      <div class="stat-block"><span class="stat-val c-gold" id="s-ready">0</span><span class="stat-label">Ready to Go</span></div>
+      <div class="stat-block"><span class="stat-val c-sage" id="s-done">0</span><span class="stat-label">She Loved It</span></div>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <div class="card-eyebrow mb12">Planned Surprises</div>
+        <div id="surprise-list"></div>
+      </div>
+      <div class="col">
+        <div class="card card-accent-top">
+          <div class="card-eyebrow">Master Planning Notes</div>
+          <textarea class="note-area" id="surprise-master-notes" placeholder="Big ideas, recurring surprises to plan, budget tracking, vendors, contacts…" style="min-height:140px;" oninput="saveNote('surprise-master-notes')"></textarea>
+        </div>
+        <div class="card" style="background:linear-gradient(135deg,rgba(200,169,110,.07),rgba(164,120,200,.05));border-color:rgba(200,169,110,.2);">
+          <div class="card-eyebrow">The Standard You're Setting</div>
+          <div style="font-family:var(--display);font-style:italic;font-size:14px;color:var(--text-dim);line-height:2;">
+            <div>✦ She should feel like she married a man who thinks about her.</div>
+            <div>✦ Surprise her in the ordinary moments, not just the big ones.</div>
+            <div>✦ Write down what makes her light up. Then do it again.</div>
+            <div>✦ Every surprise is a proof that you pay attention.</div>
+            <div>✦ The goal: she brags about you without thinking twice.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- DATE MODAL -->
+<div class="modal-overlay" id="date-modal" style="display:none;" onclick="if(event.target===this)closeDateModal()">
+  <div class="modal">
+    <h3>Plan a Date</h3>
+    <div class="field"><label>Date Idea</label><input class="inp" id="date-title-inp" placeholder="e.g. Sunset picnic at the park…"/></div>
+    <div class="field"><label>Status</label><select class="inp" id="date-status-inp"><option value="idea">Idea</option><option value="planned">Planned</option><option value="done">Done ✨</option></select></div>
+    <div class="field"><label>When</label><input type="date" class="inp" id="date-date-inp"/></div>
+    <div class="field"><label>Notes</label><textarea class="inp" id="date-notes-inp" placeholder="Details, reservations, what to bring…" style="min-height:60px;"></textarea></div>
+    <div class="modal-footer"><button class="btn-ghost" onclick="closeDateModal()">Cancel</button><button class="btn" onclick="saveDateNight()">Save</button></div>
+  </div>
+</div>
+
+<!-- SURPRISE MODAL -->
+<div class="modal-overlay" id="surprise-modal" style="display:none;" onclick="if(event.target===this)closeSurpriseModal()">
+  <div class="modal">
+    <h3 id="surprise-modal-title">Surprise Date</h3>
+    <div class="field"><label>Title</label><input class="inp" id="s-title-inp" placeholder="e.g. Rooftop dinner under the stars…"/></div>
+    <div class="field"><label>Details / Plan</label><textarea class="inp" id="s-detail-inp" placeholder="How it'll go, what you'll need, reservations…" style="min-height:80px;"></textarea></div>
+    <div class="field"><label>Budget</label><input class="inp" id="s-budget-inp" placeholder="e.g. $150"/></div>
+    <div class="field"><label>Target Date</label><input type="date" class="inp" id="s-date-inp"/></div>
+    <div class="field"><label>Status</label><select class="inp" id="s-status-inp"><option value="planning">Planning</option><option value="ready">Ready to Go</option><option value="done">She Loved It ✨</option></select></div>
+    <div class="modal-footer"><button class="btn-ghost" onclick="closeSurpriseModal()">Cancel</button><button class="btn" onclick="saveSurprise()">Save</button></div>
+  </div>
+</div>
+
+<script>
+const SK='wife-dashboard-v2';
+const CORRECT_PIN='20720';
+
+const LOVE_LANGUAGES=[
+  {key:'words',icon:'💬',name:'Words of Affirmation',color:'#C8A96E'},
+  {key:'acts',icon:'🤝',name:'Acts of Service',color:'#7BA68A'},
+  {key:'gifts',icon:'🎁',name:'Gift Giving',color:'#C4868A'},
+  {key:'time',icon:'⏱️',name:'Quality Time',color:'#6B9FC4'},
+  {key:'touch',icon:'🤗',name:'Physical Touch',color:'#A478C8'},
+];
+const PRAYERS=['Fajr','Dhuhr','Asr','Maghrib','Isha'];
+const AYAHS=[
+  {arabic:'وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً',trans:'"And of His signs is that He created for you from yourselves mates that you may find tranquillity in them; and He placed between you affection and mercy."',ref:'Surah Ar-Rum · 30:21'},
+  {arabic:'هُنَّ لِبَاسٌ لَّكُمْ وَأَنتُمْ لِبَاسٌ لَّهُنَّ',trans:'"They are a garment for you and you are a garment for them."',ref:'Surah Al-Baqarah · 2:187'},
+  {arabic:'وَعَاشِرُوهُنَّ بِالْمَعْرُوفِ',trans:'"And live with them in kindness."',ref:'Surah An-Nisa · 4:19'},
+  {arabic:'رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ',trans:'"Our Lord, grant us from among our wives and offspring comfort to our eyes and make us an example for the righteous."',ref:'Surah Al-Furqan · 25:74'},
+];
+const REMINDERS=[
+  "Make du'a for her before she wakes up.",
+  "Tell her one thing you genuinely appreciate about her today.",
+  "Send her a message just to let her know she's on your mind.",
+  "Ask how she's feeling — and actually listen.",
+  "Do one act of service for her today, without being asked.",
+  "Pray two rak'ah together tonight before sleeping.",
+  "Give her your full, phone-free attention for at least 30 minutes.",
+  "Remind her of a quality you love about her.",
+  "Make her laugh today.",
+  "Hold her hand or give her a long, sincere hug.",
+  "Write her a note — even just one line.",
+  "Ask about her dreams and listen with your heart.",
+  "Handle something she's been carrying — silently and without credit.",
+  "Start Fajr together. The day changes when it begins with Allah.",
+  "Be the calm in her storm today.",
+  "Tell her she's beautiful — mean it.",
+  "Remember: she chose you. Honor that every single day.",
+  "Speak gently. Your tone is as important as your words.",
+];
+const HER_MESSAGES=[
+  "Today is a new day filled with Allah's mercy. You are loved, seen, and cherished. 🌸",
+  "Your husband is thinking about you. You are his peace and he is yours.",
+  "Alhamdulillah for you. For your presence, your spirit, your light.",
+  "You are a blessing. This home is better because you are in it.",
+  "He makes du'a for you. You are never far from his heart.",
+  "Rest in the knowledge that you are deeply loved — by Allah first, and by your husband.",
+  "Whatever today holds, you don't walk through it alone. Tawakkul 💛",
+  "You are more than enough. More than he could have asked for.",
+  "Your smile is sadaqah. Your patience is strength. Your dua moves mountains.",
+  "He sees your effort. He sees your heart. Jazakillah khairan, habibti.",
+];
+
+let state={
+  mode:'his',
+  notes:{},llScores:{},prayers:{},dhikrStreak:0,
+  primaryLL:'',secondaryLL:'',
+  gifts:[],herWishes:[],dates:[],impDates:[],moodLog:[],surprises:[],
+};
+let selectedMood=null;
+let currentSurpriseType='date';
+let pinUnlocked=false;
+let pinEntry='';
+
+function load(){
+  const r=localStorage.getItem(SK);
+  if(!r)return;
+  try{const s=JSON.parse(r);Object.assign(state,s);}catch(e){}
+}
+function save(){localStorage.setItem(SK,JSON.stringify(state));}
+
+/* ── MODE ── */
+function setMode(m){
+  state.mode=m;save();
+  document.body.classList.toggle('her-mode',m==='her');
+  document.getElementById('his-btn').className='mode-btn'+(m==='his'?' active-his':'');
+  document.getElementById('her-btn').className='mode-btn'+(m==='her'?' active-her':'');
+  const ind=document.getElementById('mode-indicator');
+  ind.className='mode-indicator '+(m==='his'?'his':'her');
+  ind.textContent=m==='his'?'Planning with love ✦':'Welcome, habibti 🌸';
+  // re-render visible panels
+  const active=document.querySelector('.panel.active');
+  if(active)refreshActivePanel(active.id.replace('panel-',''));
+}
+
+function refreshActivePanel(name){
+  if(name==='overview')renderOverview();
+  if(name==='love')renderLove();
+  if(name==='ibadah')renderIbadah();
+  if(name==='dates')renderDates();
+  if(name==='gifts')renderGifts();
+  if(name==='mood')renderMood();
+}
+
+/* ── TABS ── */
+function switchTab(el,name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='surprises'&&!pinUnlocked){showLock();}
+  else if(name==='surprises'&&pinUnlocked){showSurprises();}
+  if(name==='overview')renderOverview();
+  if(name==='love')renderLove();
+  if(name==='ibadah')renderIbadah();
+  if(name==='dates')renderDates();
+  if(name==='gifts')renderGifts();
+  if(name==='mood')renderMood();
+  if(name==='surprises'&&pinUnlocked)renderSurprises();
+}
+
+/* ── DATE / AYAH ── */
+function updateDate(){
+  const now=new Date();
+  document.getElementById('live-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const doy=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000);
+  const a=AYAHS[doy%AYAHS.length];
+  document.getElementById('ayah-arabic').textContent=a.arabic;
+  document.getElementById('ayah-trans').textContent=a.trans;
+  document.getElementById('ayah-ref').textContent=a.ref;
+  const rt=document.getElementById('reminder-text');
+  if(rt)rt.textContent=REMINDERS[doy%REMINDERS.length];
+  const hm=document.getElementById('her-daily-msg');
+  if(hm)hm.textContent=HER_MESSAGES[doy%HER_MESSAGES.length];
+}
+function todayKey(){return new Date().toISOString().slice(0,10);}
+
+/* ── NOTES ── */
+function saveNote(key){const el=document.getElementById(key);if(el){state.notes[key]=el.value;save();syncHerView();}}
+function loadNotes(){
+  const keys=['intention-today','appreciate-today','love-commitment','quran-goal','dua-for-her','date-bucket','her-prefs','she-loves','conflict-notes','marriage-vision','her-goals','love-letter','her-ll-message','her-message-to-him','surprise-master-notes','her-wish-inp'];
+  keys.forEach(k=>{const el=document.getElementById(k);if(el&&state.notes[k]!==undefined)el.value=state.notes[k];});
+}
+function syncHerView(){
+  // His notes → her read-only views
+  const map={
+    'her-see-intention':'intention-today',
+    'her-see-appreciate':'appreciate-today',
+    'her-see-dua':'dua-for-her',
+    'his-see-her-message':'her-message-to-him',
+  };
+  Object.entries(map).forEach(([herId,hisKey])=>{
+    const el=document.getElementById(herId);
+    if(el)el.textContent=state.notes[hisKey]||'—';
+  });
+}
+
+/* ── LOVE LANGUAGES ── */
+function savePrimaryLL(){
+  const pl=document.getElementById('primary-ll');
+  const sl=document.getElementById('secondary-ll');
+  state.primaryLL=pl?pl.value:'';
+  state.secondaryLL=sl?sl.value:'';
+  save();
+}
+function incrementLL(key){
+  const today=todayKey();
+  if(!state.llScores[today])state.llScores[today]={words:0,acts:0,gifts:0,time:0,touch:0};
+  state.llScores[today][key]=(state.llScores[today][key]||0)+1;
+  save();renderLove();renderOverview();
+}
+function renderLove(){
+  const today=todayKey();
+  const scores=state.llScores[today]||{};
+  const max=Math.max(...Object.values(scores),1);
+  const isHer=state.mode==='her';
+  const el=document.getElementById('ll-tracker');
+  if(!el)return;
+  el.innerHTML=LOVE_LANGUAGES.map(ll=>`
+    <div class="ll-row">
+      <div class="ll-icon">${ll.icon}</div>
+      <div style="flex:1;">
+        <div class="ll-name">${ll.name}</div>
+        <div class="ll-bar-track"><div class="ll-bar-fill" style="width:${(scores[ll.key]||0)/max*100}%;background:${ll.color};"></div></div>
+      </div>
+      <div class="ll-score">${scores[ll.key]||0}</div>
+      ${!isHer?`<button class="ll-btn" onclick="incrementLL('${ll.key}')">＋</button>`:''}
+    </div>`).join('');
+  const pl=document.getElementById('primary-ll');
+  const sl=document.getElementById('secondary-ll');
+  if(pl&&state.primaryLL)pl.value=state.primaryLL;
+  if(sl&&state.secondaryLL)sl.value=state.secondaryLL;
+  const hlm=document.getElementById('her-ll-message');
+  if(hlm&&state.notes['her-ll-message'])hlm.value=state.notes['her-ll-message'];
+  const lc=document.getElementById('love-commitment');
+  if(lc&&state.notes['love-commitment'])lc.value=state.notes['love-commitment'];
+}
+
+/* ── IBADAH ── */
+function togglePrayer(name){
+  const today=todayKey();
+  if(!state.prayers[today])state.prayers[today]={};
+  state.prayers[today][name]=!state.prayers[today][name];
+  save();renderIbadah();renderOverview();
+}
+function incrementDhikr(){state.dhikrStreak++;save();renderIbadah();}
+function resetDhikr(){if(confirm('Reset streak?')){state.dhikrStreak=0;save();renderIbadah();}}
+function renderIbadah(){
+  const today=todayKey();
+  const prayers=state.prayers[today]||{};
+  const pl=document.getElementById('prayer-list');
+  if(pl)pl.innerHTML=PRAYERS.map(p=>`
+    <div class="prayer-row">
+      <div class="prayer-check ${prayers[p]?'done':''}" onclick="togglePrayer('${p}')"></div>
+      <div class="prayer-name">${p}</div>
+      <div class="prayer-note">${prayers[p]?'Together ✓':''}</div>
+    </div>`).join('');
+  const ds=document.getElementById('dhikr-streak');
+  if(ds)ds.textContent=state.dhikrStreak;
+  // notes
+  ['quran-goal','dua-for-her'].forEach(k=>{const e=document.getElementById(k);if(e&&state.notes[k])e.value=state.notes[k];});
+  syncHerView();
+}
+
+/* ── DATE NIGHTS ── */
+function openDateModal(){
+  ['date-title-inp','date-notes-inp'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('date-status-inp').value='idea';
+  document.getElementById('date-date-inp').value='';
+  document.getElementById('date-modal').style.display='flex';
+}
+function closeDateModal(){document.getElementById('date-modal').style.display='none';}
+function saveDateNight(){
+  const t=document.getElementById('date-title-inp').value.trim();if(!t)return;
+  state.dates.push({id:Date.now(),title:t,status:document.getElementById('date-status-inp').value,date:document.getElementById('date-date-inp').value,notes:document.getElementById('date-notes-inp').value.trim()});
+  save();closeDateModal();renderDates();renderOverview();
+}
+function deleteDateNight(id){state.dates=state.dates.filter(x=>x.id!==id);save();renderDates();renderOverview();}
+function cycleDateStatus(id){
+  const d=state.dates.find(x=>x.id===id);if(!d)return;
+  const c={idea:'planned',planned:'done',done:'idea'};d.status=c[d.status];
+  save();renderDates();
+}
+function renderDates(){
+  const filter=document.getElementById('date-filter')?.value||'all';
+  const filtered=filter==='all'?state.dates:state.dates.filter(d=>d.status===filter);
+  const icons={idea:'💭',planned:'📅',done:'✨'};
+  const sCls={idea:'ds-idea',planned:'ds-planned',done:'ds-done'};
+  const sLbl={idea:'Idea',planned:'Planned',done:'Done ✨'};
+  const isHer=state.mode==='her';
+  const el=document.getElementById('date-list');
+  if(!el)return;
+  el.innerHTML=filtered.length?filtered.map(d=>`
+    <div class="date-card">
+      <div style="display:flex;align-items:flex-start;gap:10px;">
+        <div style="font-size:20px;">${icons[d.status]}</div>
+        <div style="flex:1;"><div class="date-title-el">${d.title}</div>${d.notes?`<div class="date-note-el">${d.notes}</div>`:''}</div>
+        <span class="date-status-badge ${sCls[d.status]}">${sLbl[d.status]}</span>
+      </div>
+      <div class="date-footer">
+        <span class="date-when-el">${d.date?new Date(d.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''}</span>
+        ${!isHer?`<button class="btn-ghost btn-sm" onclick="cycleDateStatus(${d.id})">→ Next</button><button class="btn-ghost btn-sm" onclick="deleteDateNight(${d.id})">Remove</button>`:''}
+      </div>
+    </div>`).join(''):'<div style="color:var(--text-dim);font-size:13px;padding:12px 0;">No dates yet.</div>';
+  ['date-bucket','her-prefs'].forEach(k=>{const e=document.getElementById(k);if(e&&state.notes[k])e.value=state.notes[k];});
+}
+
+/* ── GIFTS ── */
+function addGift(){
+  const inp=document.getElementById('gift-inp');const t=inp.value.trim();if(!t)return;
+  state.gifts.push({id:Date.now(),name:t,cat:document.getElementById('gift-cat-inp').value,budget:document.getElementById('gift-budget-inp').value.trim(),bought:false});
+  inp.value='';document.getElementById('gift-budget-inp').value='';
+  save();renderGifts();renderOverview();
+}
+function toggleGiftBought(id){const g=state.gifts.find(x=>x.id===id);if(g){g.bought=!g.bought;save();renderGifts();}}
+function deleteGift(id){state.gifts=state.gifts.filter(x=>x.id!==id);save();renderGifts();renderOverview();}
+function addHerWish(){
+  const inp=document.getElementById('her-wish-inp');const t=inp.value.trim();if(!t)return;
+  state.herWishes=state.herWishes||[];
+  state.herWishes.push({id:Date.now(),name:t});
+  inp.value='';save();renderGifts();
+}
+function deleteHerWish(id){state.herWishes=state.herWishes.filter(x=>x.id!==id);save();renderGifts();}
+function addImpDate(){
+  const n=document.getElementById('imp-date-name').value.trim();
+  const v=document.getElementById('imp-date-val').value;if(!n||!v)return;
+  state.impDates.push({id:Date.now(),name:n,date:v});
+  document.getElementById('imp-date-name').value='';document.getElementById('imp-date-val').value='';
+  save();renderGifts();
+}
+function deleteImpDate(id){state.impDates=state.impDates.filter(x=>x.id!==id);save();renderGifts();}
+function renderGifts(){
+  const catColors={everyday:'#C8A96E',occasion:'#C4868A',experience:'#6B9FC4',spiritual:'#7BA68A',surprise:'#A478C8'};
+  const isHer=state.mode==='her';
+  const gl=document.getElementById('gift-list');
+  if(gl)gl.innerHTML=state.gifts.length?state.gifts.map(g=>`
+    <div class="gift-item">
+      <span style="font-size:16px;">🎁</span>
+      <span class="gift-name ${g.bought?'gift-bought':''}">${g.name}${g.budget?` <span style="color:var(--muted);font-size:11px;">· ${g.budget}</span>`:''}</span>
+      <span class="gift-cat-badge" style="background:rgba(200,169,110,.1);color:${catColors[g.cat]||'var(--gold)'};">${g.cat}</span>
+      ${!isHer?`<button class="gift-check-btn" onclick="toggleGiftBought(${g.id})">${g.bought?'↩️':'✅'}</button><button class="gift-del-btn" onclick="deleteGift(${g.id})">✕</button>`:''}
+    </div>`).join(''):'<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">No gifts saved yet.</div>';
+  // Her wishlist
+  const hwl=document.getElementById('her-wish-list');
+  if(hwl){
+    const wishes=state.herWishes||[];
+    hwl.innerHTML=wishes.length?wishes.map(w=>`
+      <div class="gift-item">
+        <span style="font-size:16px;">🌸</span>
+        <span class="gift-name">${w.name}</span>
+        <button class="gift-del-btn" onclick="deleteHerWish(${w.id})">✕</button>
+      </div>`).join(''):'<div style="color:var(--text-dim);font-size:12px;padding:8px 0;">No wishes yet — add what your heart desires.</div>';
+  }
+  // Important dates
+  const idl=document.getElementById('important-dates-list');
+  if(idl){
+    const now=new Date();
+    idl.innerHTML=state.impDates.length?[...state.impDates].sort((a,b)=>{
+      const toNext=d=>{const dt=new Date(d.date+'T12:00:00');const n=new Date(dt.setFullYear(now.getFullYear()));if(n<now)n.setFullYear(now.getFullYear()+1);return n-now;};
+      return toNext(a)-toNext(b);
+    }).map(d=>{
+      const dt=new Date(d.date+'T12:00:00');const next=new Date(dt.setFullYear(now.getFullYear()));if(next<now)next.setFullYear(now.getFullYear()+1);
+      const days=Math.ceil((next-now)/86400000);
+      return `<div class="gift-item"><span style="font-size:16px;">📅</span><span class="gift-name">${d.name}</span>
+        <span style="font-size:11px;color:${days<=14?'var(--rose)':'var(--muted)'};">${days===0?'Today 🎉':`${days}d`}</span>
+        <button class="gift-del-btn" onclick="deleteImpDate(${d.id})">✕</button></div>`;
+    }).join(''):'<div style="color:var(--text-dim);font-size:12px;padding:8px 0;">No dates added yet.</div>';
+  }
+  const sl=document.getElementById('she-loves');if(sl&&state.notes['she-loves'])sl.value=state.notes['she-loves'];
+}
+
+/* ── MOOD ── */
+function selectMood(emoji,label){
+  selectedMood={emoji,label};
+  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+}
+function logMood(){
+  if(!selectedMood)return;
+  const note=document.getElementById('mood-note').value.trim();
+  const who=state.mode==='her'?'Her':'Him';
+  state.moodLog.unshift({id:Date.now(),emoji:selectedMood.emoji,label:selectedMood.label,note,who,date:todayKey(),time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})});
+  if(state.moodLog.length>80)state.moodLog=state.moodLog.slice(0,80);
+  document.getElementById('mood-note').value='';
+  selectedMood=null;document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+  save();renderMood();
+}
+function renderMood(){
+  const el=document.getElementById('mood-history');if(!el)return;
+  el.innerHTML=state.moodLog.length?state.moodLog.slice(0,20).map(m=>`
+    <div class="mood-log-item">
+      <span style="font-size:18px;">${m.emoji}</span>
+      <span style="font-size:11px;background:rgba(74,82,112,.3);border-radius:3px;padding:1px 6px;color:var(--text-dim);">${m.who||'—'}</span>
+      <span style="font-size:13px;font-weight:600;">${m.label}</span>
+      ${m.note?`<span style="font-size:12px;color:var(--text-dim);font-style:italic;">— ${m.note}</span>`:''}
+      <span class="mood-log-date" style="margin-left:auto;">${m.date} ${m.time}</span>
+    </div>`).join(''):'<div style="color:var(--text-dim);font-size:13px;padding:10px 0;">No check-ins yet.</div>';
+  // her message
+  ['her-message-to-him','conflict-notes'].forEach(k=>{const e=document.getElementById(k);if(e&&state.notes[k])e.value=state.notes[k];});
+  syncHerView();
+}
+
+/* ── PIN / SURPRISES ── */
+function showLock(){
+  document.getElementById('lock-screen').style.display='flex';
+  document.getElementById('surprises-content').style.display='none';
+  pinEntry='';updatePinDisplay();
+}
+function showSurprises(){
+  document.getElementById('lock-screen').style.display='none';
+  document.getElementById('surprises-content').style.display='block';
+  renderSurprises();
+}
+function lockSurprises(){
+  pinUnlocked=false;pinEntry='';
+  showLock();
+}
+function pinPress(d){
+  if(pinEntry.length>=5)return;
+  pinEntry+=d;updatePinDisplay();
+  if(pinEntry.length===5){
+    setTimeout(()=>{
+      if(pinEntry===CORRECT_PIN){
+        pinUnlocked=true;
+        document.getElementById('pin-error').textContent='';
+        showSurprises();
+      } else {
+        const disp=document.getElementById('pin-display');
+        disp.classList.add('shake');
+        setTimeout(()=>disp.classList.remove('shake'),400);
+        document.getElementById('pin-error').textContent='Incorrect code. Try again.';
+        pinEntry='';updatePinDisplay();
+      }
+    },120);
+  }
+}
+function pinBack(){pinEntry=pinEntry.slice(0,-1);updatePinDisplay();}
+function updatePinDisplay(){
+  for(let i=0;i<5;i++){
+    const dot=document.getElementById('pd'+i);
+    if(dot)dot.className='pin-dot'+(i<pinEntry.length?' filled':'');
+  }
+}
+
+/* ── SURPRISES ── */
+function openSurpriseModal(type){
+  currentSurpriseType=type;
+  const titles={date:'🌹 Surprise Date',gift:'🎁 Surprise Gift',exp:'✨ Experience'};
+  document.getElementById('surprise-modal-title').textContent=titles[type]||'Surprise';
+  ['s-title-inp','s-detail-inp','s-budget-inp'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('s-date-inp').value='';
+  document.getElementById('s-status-inp').value='planning';
+  document.getElementById('surprise-modal').style.display='flex';
+}
+function closeSurpriseModal(){document.getElementById('surprise-modal').style.display='none';}
+function saveSurprise(){
+  const t=document.getElementById('s-title-inp').value.trim();if(!t)return;
+  state.surprises.push({id:Date.now(),type:currentSurpriseType,title:t,detail:document.getElementById('s-detail-inp').value.trim(),budget:document.getElementById('s-budget-inp').value.trim(),date:document.getElementById('s-date-inp').value,status:document.getElementById('s-status-inp').value});
+  save();closeSurpriseModal();renderSurprises();
+}
+function deleteSurprise(id){if(!confirm('Remove this surprise?'))return;state.surprises=state.surprises.filter(x=>x.id!==id);save();renderSurprises();}
+function cycleSurpriseStatus(id){
+  const s=state.surprises.find(x=>x.id===id);if(!s)return;
+  const c={planning:'ready',ready:'done',done:'planning'};s.status=c[s.status];
+  save();renderSurprises();
+}
+function renderSurprises(){
+  const total=state.surprises.length;
+  const planning=state.surprises.filter(s=>s.status==='planning').length;
+  const ready=state.surprises.filter(s=>s.status==='ready').length;
+  const done=state.surprises.filter(s=>s.status==='done').length;
+  document.getElementById('s-total').textContent=total;
+  document.getElementById('s-planning').textContent=planning;
+  document.getElementById('s-ready').textContent=ready;
+  document.getElementById('s-done').textContent=done;
+  const typeColors={date:'var(--gold)',gift:'var(--rose)',exp:'var(--purple)'};
+  const typeLabels={date:'📅 Date Night',gift:'🎁 Gift',exp:'✨ Experience'};
+  const sCls={planning:'ss-planning',ready:'ss-ready',done:'ss-done'};
+  const sLbl={planning:'Planning',ready:'Ready 🔥',done:'She Loved It ✨'};
+  const el=document.getElementById('surprise-list');if(!el)return;
+  const sorted=[...state.surprises].sort((a,b)=>{const o={ready:0,planning:1,done:2};return o[a.status]-o[b.status];});
+  el.innerHTML=sorted.length?sorted.map(s=>`
+    <div class="surprise-card sc-${s.type}">
+      <div class="surprise-type" style="color:${typeColors[s.type]}">${typeLabels[s.type]}</div>
+      <div class="surprise-title-el">${s.title}</div>
+      ${s.detail?`<div class="surprise-detail">${s.detail}</div>`:''}
+      <div class="surprise-footer">
+        <span class="surprise-when">${s.date?new Date(s.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''} ${s.budget?'· '+s.budget:''}</span>
+        <span class="surprise-status-badge ${sCls[s.status]}">${sLbl[s.status]}</span>
+        <button class="btn-ghost btn-sm" onclick="cycleSurpriseStatus(${s.id})">→</button>
+        <button class="gift-del-btn" onclick="deleteSurprise(${s.id})">✕</button>
+      </div>
+    </div>`).join(''):'<div style="color:var(--text-dim);font-size:13px;padding:14px 0;">No surprises planned yet. She deserves something special. 🌹</div>';
+  const mn=document.getElementById('surprise-master-notes');if(mn&&state.notes['surprise-master-notes'])mn.value=state.notes['surprise-master-notes'];
+}
+
+/* ── OVERVIEW ── */
+function renderOverview(){
+  const today=todayKey();
+  const scores=state.llScores[today]||{};
+  const total=Object.values(scores).reduce((a,b)=>a+b,0);
+  document.getElementById('ov-ll-score').textContent=total||'—';
+  const prayers=state.prayers[today]||{};
+  document.getElementById('ov-prayers').textContent=Object.values(prayers).filter(Boolean).length+'/5';
+  document.getElementById('ov-dates').textContent=state.dates.filter(d=>d.status==='planned').length;
+  document.getElementById('ov-gifts').textContent=state.gifts.filter(g=>!g.bought).length;
+  const max=Math.max(...Object.values(scores),1);
+  document.getElementById('ov-ll-summary').innerHTML=LOVE_LANGUAGES.map(ll=>`
+    <div class="ll-row" style="padding:7px 0;">
+      <div class="ll-icon">${ll.icon}</div>
+      <div style="flex:1;"><div style="font-size:13px;font-family:'Cormorant Garamond',serif;font-weight:600;">${ll.name}</div>
+        <div style="height:4px;background:var(--border);border-radius:99px;overflow:hidden;margin-top:5px;"><div style="height:100%;width:${(scores[ll.key]||0)/max*100}%;background:${ll.color};border-radius:99px;transition:width .5s;"></div></div>
+      </div>
+      <div style="font-size:12px;color:var(--text-dim);min-width:24px;text-align:right;">${scores[ll.key]||0}</div>
+    </div>`).join('');
+  syncHerView();
+}
+
+/* ── INIT ── */
+load();
+updateDate();setInterval(updateDate,60000);
+// Restore mode
+if(state.mode==='her'){document.body.classList.add('her-mode');document.getElementById('his-btn').className='mode-btn';document.getElementById('her-btn').className='mode-btn active-her';const ind=document.getElementById('mode-indicator');ind.className='mode-indicator her';ind.textContent='Welcome, habibti 🌸';}
+loadNotes();
+renderOverview();renderLove();renderIbadah();renderDates();renderGifts();renderMood();
+syncHerView();
+</script>
+</body>
+</html>
