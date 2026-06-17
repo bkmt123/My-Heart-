@@ -44,6 +44,24 @@ header{position:relative;padding:32px 36px 24px;border-bottom:1px solid var(--bo
 .mode-indicator{margin-left:auto;font-family:var(--display);font-style:italic;font-size:14px;}
 .mode-indicator.his{color:var(--gold);}
 .mode-indicator.her{color:var(--rose);}
+/* ── SYNC BADGE ── */
+.sync-area{margin-left:auto;display:flex;align-items:center;gap:10px;}
+#sync-badge{font-size:11px;display:flex;align-items:center;gap:5px;color:var(--muted);transition:color .3s;}
+#sync-badge span{font-family:var(--body);}
+.sync-gear{background:transparent;border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:13px;color:var(--muted);cursor:pointer;transition:all .2s;}
+.sync-gear:hover{border-color:var(--gold);color:var(--gold);}
+/* ── SYNC MODAL ── */
+.sync-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;}
+.sync-modal{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:28px;width:min(480px,92vw);position:relative;}
+.sync-modal h3{font-family:var(--display);font-size:22px;font-weight:600;margin-bottom:4px;}
+.sync-modal h3 em{color:var(--gold);font-style:italic;}
+.sync-modal-sub{font-size:12px;color:var(--text-dim);margin-bottom:20px;line-height:1.6;}
+.sync-field{margin-bottom:14px;}
+.sync-field label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.sync-guide{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:18px;font-size:12px;color:var(--text-dim);line-height:1.8;}
+.sync-guide strong{color:var(--gold-soft);}
+.sync-guide code{background:var(--bg);padding:1px 5px;border-radius:4px;font-family:monospace;color:var(--text);}
+.sync-modal-footer{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:16px;margin-top:4px;}
 
 /* ── NAV ── */
 nav{display:flex;gap:2px;padding:10px 36px 0;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;background:var(--surface);}
@@ -285,6 +303,10 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.6;}
   <div class="mode-toggle">
     <button class="mode-btn active-his" id="his-btn" onclick="setMode('his')">👤 His Side</button>
     <button class="mode-btn" id="her-btn" onclick="setMode('her')">🌸 Her Side</button>
+  </div>
+  <div class="sync-area">
+    <span id="sync-badge" title="Airtable sync status">⚪ <span>Not configured</span></span>
+    <button class="sync-gear" onclick="openSyncSettings()" title="Configure cloud sync">☁ Sync</button>
   </div>
   <div class="mode-indicator his" id="mode-indicator">Planning with love ✦</div>
 </div>
@@ -763,6 +785,158 @@ textarea.inp{resize:vertical;min-height:80px;line-height:1.6;}
 const SK='wife-dashboard-v2';
 const CORRECT_PIN='20720';
 
+// ── AIRTABLE CONFIG ──────────────────────────────────────────────────────────
+// Replace these three values with your own. See setup guide below.
+const AT_CONFIG = {
+  apiKey:  localStorage.getItem('at_api_key')  || '',   // Airtable Personal Access Token
+  baseId:  localStorage.getItem('at_base_id')  || '',   // e.g. appXXXXXXXXXXXXXX
+  tableId: localStorage.getItem('at_table_id') || '',   // e.g. tblXXXXXXXXXXXXXX or table name
+  recordId:localStorage.getItem('at_record_id')|| '',   // filled automatically after first push
+};
+
+let syncStatus = 'idle'; // idle | syncing | saved | error
+let syncTimeout = null;
+
+function atConfigured(){
+  return AT_CONFIG.apiKey && AT_CONFIG.baseId && AT_CONFIG.tableId;
+}
+
+function atUrl(recordId){
+  const base = `https://api.airtable.com/v0/${AT_CONFIG.baseId}/${encodeURIComponent(AT_CONFIG.tableId)}`;
+  return recordId ? `${base}/${recordId}` : base;
+}
+
+function atHeaders(){
+  return { 'Authorization':`Bearer ${AT_CONFIG.apiKey}`, 'Content-Type':'application/json' };
+}
+
+function setSyncBadge(status, msg=''){
+  syncStatus = status;
+  const badge = document.getElementById('sync-badge');
+  if(!badge) return;
+  const map = {
+    idle:    ['⚪','Not configured','#4A5270'],
+    syncing: ['🔄','Syncing…','#C8A96E'],
+    saved:   ['🟢','Synced','#7BA68A'],
+    error:   ['🔴', msg||'Sync error','#C4868A'],
+    offline: ['🟡','Offline — saved locally','#C8A96E'],
+  };
+  const [icon, label, color] = map[status] || map.idle;
+  badge.innerHTML = `${icon} <span>${label}</span>`;
+  badge.style.color = color;
+}
+
+// Pull latest state from Airtable on load
+async function syncPull(){
+  if(!atConfigured()) return;
+  setSyncBadge('syncing');
+  try {
+    let url, res, data;
+    if(AT_CONFIG.recordId){
+      // Fetch known record directly
+      res = await fetch(atUrl(AT_CONFIG.recordId), { headers: atHeaders() });
+      data = await res.json();
+      if(data.error){ throw new Error(data.error.message); }
+      const remote = JSON.parse(data.fields.StateJSON || '{}');
+      // Merge: remote wins on everything except mode (keep local mode preference)
+      const localMode = state.mode;
+      Object.assign(state, remote);
+      state.mode = localMode;
+    } else {
+      // First time — search for existing record for this dashboard
+      res = await fetch(atUrl() + '?maxRecords=1&filterByFormula={DashboardKey}="wife-dashboard-v2"', { headers: atHeaders() });
+      data = await res.json();
+      if(data.error){ throw new Error(data.error.message); }
+      if(data.records && data.records.length > 0){
+        AT_CONFIG.recordId = data.records[0].id;
+        localStorage.setItem('at_record_id', AT_CONFIG.recordId);
+        const remote = JSON.parse(data.records[0].fields.StateJSON || '{}');
+        const localMode = state.mode;
+        Object.assign(state, remote);
+        state.mode = localMode;
+      }
+      // else: no record yet — will be created on first push
+    }
+    setSyncBadge('saved');
+  } catch(e){
+    console.warn('Airtable pull failed:', e);
+    setSyncBadge(navigator.onLine ? 'error' : 'offline', e.message);
+  }
+}
+
+// Push state to Airtable (debounced so rapid typing doesn't flood API)
+function schedulePush(){
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(syncPush, 1500);
+}
+
+async function syncPush(){
+  if(!atConfigured()){ return; }
+  setSyncBadge('syncing');
+  // Strip surprises from the payload — they live only in localStorage for privacy
+  const payload = { ...state };
+  // StateJSON field holds the entire state; DashboardKey is used to find the record
+  const fields = { DashboardKey: 'wife-dashboard-v2', StateJSON: JSON.stringify(payload) };
+  try {
+    let res, data;
+    if(AT_CONFIG.recordId){
+      res = await fetch(atUrl(AT_CONFIG.recordId), {
+        method:'PATCH', headers: atHeaders(), body: JSON.stringify({ fields })
+      });
+    } else {
+      res = await fetch(atUrl(), {
+        method:'POST', headers: atHeaders(), body: JSON.stringify({ fields })
+      });
+    }
+    data = await res.json();
+    if(data.error){ throw new Error(data.error.message); }
+    if(!AT_CONFIG.recordId && data.id){
+      AT_CONFIG.recordId = data.id;
+      localStorage.setItem('at_record_id', data.id);
+    }
+    setSyncBadge('saved');
+  } catch(e){
+    console.warn('Airtable push failed:', e);
+    setSyncBadge(navigator.onLine ? 'error' : 'offline', e.message);
+  }
+}
+
+// ── SETTINGS MODAL ───────────────────────────────────────────────────────────
+function openSyncSettings(){
+  document.getElementById('sync-modal').style.display='flex';
+  document.getElementById('set-api-key').value  = AT_CONFIG.apiKey;
+  document.getElementById('set-base-id').value  = AT_CONFIG.baseId;
+  document.getElementById('set-table-id').value = AT_CONFIG.tableId;
+}
+function closeSyncSettings(){ document.getElementById('sync-modal').style.display='none'; }
+async function saveSyncSettings(){
+  const k = document.getElementById('set-api-key').value.trim();
+  const b = document.getElementById('set-base-id').value.trim();
+  const t = document.getElementById('set-table-id').value.trim();
+  if(!k||!b||!t){ alert('Please fill in all three fields.'); return; }
+  AT_CONFIG.apiKey  = k; localStorage.setItem('at_api_key',  k);
+  AT_CONFIG.baseId  = b; localStorage.setItem('at_base_id',  b);
+  AT_CONFIG.tableId = t; localStorage.setItem('at_table_id', t);
+  AT_CONFIG.recordId = ''; localStorage.removeItem('at_record_id');
+  closeSyncSettings();
+  await syncPull();
+  refreshAll();
+}
+function clearSyncSettings(){
+  if(!confirm('Clear Airtable credentials? Data stays locally but cross-device sync will stop.')) return;
+  ['at_api_key','at_base_id','at_table_id','at_record_id'].forEach(k=>localStorage.removeItem(k));
+  AT_CONFIG.apiKey=AT_CONFIG.baseId=AT_CONFIG.tableId=AT_CONFIG.recordId='';
+  closeSyncSettings();
+  setSyncBadge('idle');
+}
+function testSyncNow(){ syncPush(); }
+
+function refreshAll(){
+  renderOverview(); renderLove(); renderIbadah(); renderDates(); renderGifts(); renderMood();
+  loadNotes(); syncHerView();
+  if(pinUnlocked) renderSurprises();
+}
+
 const LOVE_LANGUAGES=[
   {key:'words',icon:'💬',name:'Words of Affirmation',color:'#C8A96E'},
   {key:'acts',icon:'🤝',name:'Acts of Service',color:'#7BA68A'},
@@ -826,7 +1000,10 @@ function load(){
   if(!r)return;
   try{const s=JSON.parse(r);Object.assign(state,s);}catch(e){}
 }
-function save(){localStorage.setItem(SK,JSON.stringify(state));}
+function save(){
+  localStorage.setItem(SK,JSON.stringify(state));
+  schedulePush();
+}
 
 /* ── MODE ── */
 function setMode(m){
@@ -1227,6 +1404,12 @@ function renderOverview(){
 
 /* ── INIT ── */
 load();
+// After local load, pull latest from Airtable (non-blocking)
+(async () => {
+  await syncPull();
+  refreshAll();
+  updateDate();
+})();
 updateDate();setInterval(updateDate,60000);
 // Restore mode
 if(state.mode==='her'){document.body.classList.add('her-mode');document.getElementById('his-btn').className='mode-btn';document.getElementById('her-btn').className='mode-btn active-her';const ind=document.getElementById('mode-indicator');ind.className='mode-indicator her';ind.textContent='Welcome, habibti 🌸';}
@@ -1234,5 +1417,43 @@ loadNotes();
 renderOverview();renderLove();renderIbadah();renderDates();renderGifts();renderMood();
 syncHerView();
 </script>
+<!-- ── SYNC SETTINGS MODAL ── -->
+<div class="sync-modal-overlay" id="sync-modal">
+  <div class="sync-modal">
+    <div class="section-eyebrow">Cloud Sync</div>
+    <h3>Airtable <em>Setup</em></h3>
+    <p class="sync-modal-sub">Connect to Airtable so both of you can access the dashboard from any device — phone, tablet, or computer.</p>
+    <div class="sync-guide">
+      <strong>One-time setup (5 minutes):</strong><br>
+      1. Go to <strong>airtable.com</strong> → create a free account<br>
+      2. Create a new <strong>Base</strong> (name it anything, e.g. "Our Dashboard")<br>
+      3. Inside it, create a <strong>Table</strong> with two fields:<br>
+      &nbsp;&nbsp;• <code>DashboardKey</code> (Single line text)<br>
+      &nbsp;&nbsp;• <code>StateJSON</code> (Long text)<br>
+      4. Go to <strong>airtable.com/create/tokens</strong> → create a token with <code>data.records:read</code> and <code>data.records:write</code> scopes for your base<br>
+      5. Copy the Base ID from the URL: <code>airtable.com/<strong>appXXXXXX</strong>/...</code><br>
+      6. Paste everything below and hit Save.
+    </div>
+    <div class="sync-field">
+      <label>Personal Access Token</label>
+      <input class="inp" id="set-api-key" type="password" placeholder="patXXXXXXXXXXXXXX"/>
+    </div>
+    <div class="sync-field">
+      <label>Base ID</label>
+      <input class="inp" id="set-base-id" placeholder="appXXXXXXXXXXXXXX"/>
+    </div>
+    <div class="sync-field">
+      <label>Table Name or ID</label>
+      <input class="inp" id="set-table-id" placeholder="Table 1  (or tblXXXXXXXXXXXXXX)"/>
+    </div>
+    <div class="sync-modal-footer">
+      <button class="btn-ghost" onclick="clearSyncSettings()" style="margin-right:auto;color:var(--rose);">Clear credentials</button>
+      <button class="btn-ghost" onclick="testSyncNow()">Sync now</button>
+      <button class="btn-ghost" onclick="closeSyncSettings()">Cancel</button>
+      <button class="btn" onclick="saveSyncSettings()">Save & Connect</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
